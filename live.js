@@ -509,7 +509,7 @@ const demoCv=document.createElement('canvas'); demoCv.width=DW; demoCv.height=DH
 function begin(cfg){
   end(false);
   L=S0();
-  L.on=true; L.mode=modeOf(cfg.mode); L.sets=cfg.sets||10; L.first=!!cfg.first; L.mission=cfg.mission||null; L.forceDemo=!!cfg.demo;
+  L.on=true; L.mode=modeOf(cfg.mode); L.sets=cfg.sets||10; L.first=!!cfg.first; L.mission=cfg.mission||null; L.forceDemo=!!cfg.demo; L.ratio=cfg.ratio||0;
   L.engine=createEngine(L.mode, L.handed);
   L.t0=performance.now();
   L.log={ app:'orvia-live', v:1, started:new Date().toISOString(), ua:navigator.userAgent,
@@ -554,7 +554,7 @@ function startSource(){
   setChip('Starting camera');
   if(L.forceDemo){ startDemo('Demo'); return; }
   if(!wantCam){ const w=window.isSecureContext?'No camera on this device':'Camera needs an https address'; startDemo(w); if(L.asked) camCard(w,false); return; }
-  const gum=navigator.mediaDevices.getUserMedia({audio:false, video:{facingMode:L.facing, width:{ideal:1280}, height:{ideal:720}, frameRate:{ideal:60,max:60}}});
+  const gum=navigator.mediaDevices.getUserMedia({audio:false, video:Object.assign({facingMode:L.facing, width:{ideal:1280}, height:{ideal:L.ratio?Math.round(1280/L.ratio):720}, frameRate:{ideal:60,max:60}}, L.ratio?{aspectRatio:{ideal:L.ratio}}:{})});
   let timedOut=false;
   const tmo=new Promise((_,rej)=>setTimeout(()=>{ timedOut=true; rej(Object.assign(new Error('timeout'),{name:'TimeoutError'})); }, 9000));
   gum.then(s=>{ if(timedOut) s.getTracks().forEach(t=>t.stop()); }).catch(()=>{});
@@ -1058,6 +1058,7 @@ function paintDemoSource(lm){
 const wideQ = () => window.matchMedia('(min-width:1000px) and (orientation:landscape)').matches;
 function mountStand(){
   const z=document.getElementById('zs'); if(!z || z.querySelector('.stand')) return;
+  if(document.documentElement.hasAttribute('data-no-stand')) return;   // tablet-portrait page: one camera window only
   const logo = (document.querySelector('.launch-logo')||{}).src || 'logo-orvia-word.webp';
   z.insertAdjacentHTML('afterbegin', `<section class="stand" aria-label="Stand camera">
     <video class="st-video" playsinline muted autoplay></video>
@@ -1111,7 +1112,7 @@ function mountStand(){
 }
 function syncStandLayout(){
   const z=document.getElementById('zs'); if(!z) return;
-  z.classList.toggle('stand-on', L.on && wideQ());
+  z.classList.toggle('stand-on', L.on && !!L.stand && wideQ());
 }
 function tag(g, x, y, text, scale, align){
   g.save();

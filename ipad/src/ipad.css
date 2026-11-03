@@ -1,0 +1,83 @@
+/* ORVIA motion tracking — iPad, portrait.
+   One fixed 834 × 1194 screen (iPad 11" in points), scaled as a whole to fit the
+   viewport so nothing is ever cut; the space around it is plain white. */
+:root{--ip-w:834px;--ip-h:1194px;--ip-box-top:132px;--ip-box-h:800px;--ip-strip:64px}
+html,body{height:100%;background:#fff}
+body{display:flex;align-items:center;justify-content:center;overflow:hidden;background:#fff;
+  padding:env(safe-area-inset-top,0) env(safe-area-inset-right,0) env(safe-area-inset-bottom,0) env(safe-area-inset-left,0)}
+.ipad-fit{position:relative;flex:0 0 auto}
+.ipad-screen{position:absolute;left:0;top:0;width:var(--ip-w);height:var(--ip-h);transform-origin:0 0;
+  border-radius:38px;overflow:hidden;isolation:isolate;box-shadow:0 0 0 1px rgba(20,24,14,.06)}
+
+/* the session screen fills the iPad — no phone chassis, no --pscale */
+.ipad-screen #zs{position:absolute;inset:0}
+.ipad-screen .zs,
+.ipad-screen .zs{width:100%!important;max-width:none!important;height:100%!important;max-height:none!important;
+  border:0!important;border-radius:0!important;box-shadow:none!important;transform:none!important;margin:0}
+.ipad-screen .zs{background:
+    radial-gradient(86% 70% at 50% 47%,
+      #010703 0%, #010703 30%, rgba(2,9,5,.96) 40%, rgba(2,10,6,.88) 48%, rgba(3,12,7,.74) 56%,
+      rgba(3,14,8,.56) 63%, rgba(4,16,9,.38) 71%, rgba(5,18,10,.22) 79%, rgba(6,20,12,.1) 88%,
+      rgba(6,22,13,.03) 95%, rgba(6,22,13,0) 100%),
+    linear-gradient(163deg,#A9BFAE 0%,#93AB99 42%,#88A28F 72%,#ADC2B3 100%)}
+.ipad-screen .statusbar{height:64px;padding:8px 40px 0;font-size:16px;color:#18241C}
+.ipad-screen .sb-time{font-weight:700;letter-spacing:.02em}
+.ip-mode{font-weight:640;font-size:14px;color:rgba(24,36,28,.72);font-variant-numeric:tabular-nums}
+.ipad-screen .zs-title{top:74px;padding:0 72px;font-size:27px;line-height:1.3;white-space:normal}
+
+/* camera window: sits in a fixed box under the title; JS sizes it to the camera's own shape */
+.ipad-screen .zs-cam.show .zc-window{top:calc(var(--ip-box-top) + var(--ip-box-h)/2);
+  width:var(--cw,640px);height:var(--ch,800px);border-radius:36px;
+  transition:width .5s cubic-bezier(.22,.9,.24,1),height .5s cubic-bezier(.22,.9,.24,1),opacity .6s ease}
+.ipad-screen .zc-video,.ipad-screen .zc-canvas{bottom:var(--ip-strip);height:calc(100% - var(--ip-strip))}
+.ipad-screen .zc-frame{inset:6% 7% calc(var(--ip-strip) + 4%)}
+.ipad-screen .zc-frame i{width:32px;height:32px;border-width:2.5px}
+.ipad-screen .zc-chip{top:18px;height:32px;padding:0 15px 0 13px;font-size:13.5px;gap:8px}
+.ipad-screen .zc-chip i{width:7px;height:7px}
+.ipad-screen .zc-hint{font-size:14px;bottom:24px;padding:0 24px}
+.ipad-screen .zc-inner.is-live .zc-hint{bottom:calc(var(--ip-strip) + 16px)}
+.ipad-screen .zc-hint.warn{color:#F4F2E6}
+.ipad-screen .zc-modes{left:14px;right:14px;bottom:12px;padding:4px;gap:3px}
+.ipad-screen .zc-modes button{height:38px;font-size:14px}
+.ipad-screen .zc-note{top:62px;height:34px;padding:0 16px;font-size:13.5px}
+.ipad-screen .zc-log{top:60px;right:16px;height:32px;padding:0 14px;font-size:13px}
+.ipad-screen .zc-debug{top:60px;left:16px;font-size:12px}
+.ipad-screen .zc-camon{top:14px;right:14px;left:auto;bottom:auto;transform:none;height:36px;padding:0 16px 0 13px;font-size:14px;gap:8px}
+.ipad-screen .zc-camon:active{transform:scale(.97)}
+.ipad-screen .zc-camon svg{width:18px;height:18px}
+.ipad-screen .zc-camcard{left:50%;right:auto;width:min(460px,calc(100% - 48px));transform:translate(-50%,-58%);padding:22px 22px 16px;border-radius:24px}
+.ipad-screen .zc-camcard b{font-size:19px}
+.ipad-screen .zc-camcard p{font-size:15px}
+.ipad-screen .zc-camcard button{height:42px;padding:0 18px;font-size:15px}
+
+/* readouts under the window */
+.ipad-screen .zs-live{top:calc(var(--ip-box-top) + var(--ip-box-h) + 18px);bottom:auto;height:96px}
+.ipad-screen .zs-live-set{gap:34px}
+.ipad-screen .zs-live-col{min-width:132px}
+.ipad-screen .zs-live-num{font-size:54px}
+.ipad-screen .zs-sets-tot{font-size:26px}
+.ipad-screen .zs-live-lab{font-size:12.5px;margin-top:12px}
+.ipad-screen .zs-live-div{height:60px}
+.ipad-screen .zs-live-set.has-tempo{gap:28px}
+.ipad-screen .zs-live-set.has-tempo .zs-live-col{min-width:124px}
+.ipad-screen .zs-live-set.has-tempo .zs-live-num{font-size:50px}
+.ipad-screen .zs-live-set.has-tempo .zs-sets-tot{font-size:24px}
+
+/* foot: the glass button, centred, iPad-sized */
+.ipad-screen .zs-foot{left:50%;right:auto;width:480px;transform:translateX(-50%);bottom:24px}
+.ipad-screen .zs-end{height:64px;font-size:17px}
+.mc-demo{margin-top:12px;height:24px;font-size:14px;font-weight:650;color:rgba(244,246,239,.82);text-decoration:underline;text-underline-offset:3px}
+.mc-demo[hidden]{display:block;visibility:hidden}
+
+/* results sheet stays inside the iPad screen */
+.ipad-screen .mc-sheet{position:absolute;inset:0;z-index:200;overflow-y:auto;background:rgba(4,5,3,.58);
+  backdrop-filter:blur(6px);-webkit-backdrop-filter:blur(6px);padding:96px 64px 64px}
+.ipad-screen .mc-sheet[hidden]{display:none}
+.mc-card{max-width:620px;margin:0 auto;background:linear-gradient(180deg,#FFFFFF,#F3F8E2);border-radius:32px;padding:26px;border:1px solid var(--stroke-hi)}
+.mc-swing{margin-top:16px;padding-top:16px;border-top:1px solid var(--stroke)}
+.mc-grid{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:7px;margin-top:12px}
+.mc-grid div{padding:10px 11px;border-radius:14px;background:rgba(20,24,14,.045);display:flex;flex-direction:column;gap:4px}
+.mc-grid span{font-size:11.5px;color:var(--muted);font-weight:560}
+.mc-grid b{font-size:17px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+.mc-grid .warn b{color:var(--warn)} .mc-grid .bad b{color:#B4532E}
+.mc-card .btn{height:54px;font-size:16px}

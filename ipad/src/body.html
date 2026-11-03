@@ -1,0 +1,43 @@
+<div class="ipad-fit" id="ipadFit">
+ <div class="ipad-screen" id="ipadScreen">
+  <div id="zs">
+   <div class="zs">
+    <div class="statusbar" aria-hidden="true"><span class="sb-time">Motion tracking</span><span class="sb-right ip-mode" id="ipMode">Mid Iron · 510 mm</span></div>
+    <p class="zs-title">Prop the iPad up, step back and swing</p>
+    <div class="zs-live">
+      <div class="zs-live-set" id="zsLive">
+        <div class="zs-live-col"><div class="zs-live-num" id="zsElapsed">00:00</div><div class="zs-live-lab">Elapsed</div></div>
+        <div class="zs-live-div"></div>
+        <div class="zs-live-col"><div class="zs-live-num" id="zsSets">0<span class="zs-sets-tot"> / 10</span></div><div class="zs-live-lab">Sets</div></div>
+      </div>
+    </div>
+    <div class="zs-cam show" id="zsCam">
+      <div class="zc-window"><div class="zc-inner">
+        <div class="zc-feed" aria-hidden="true"></div>
+        <div class="zc-frame" aria-hidden="true"><i></i><i></i><i></i><i></i></div>
+        <div class="zc-pose"></div>
+        <span class="zc-chip"><i></i>Ready</span>
+        <p class="zc-hint" id="ipHint">Keep your whole body inside the frame</p>
+      </div></div>
+    </div>
+    <div class="zs-foot">
+      <button class="zs-end" id="mcEnd" type="button">Start with camera</button>
+      <button class="mc-demo" id="mcDemo" type="button">Watch the demo instead</button>
+    </div>
+   </div>
+  </div>
+
+  <div class="mc-sheet" id="mcSheet" hidden>
+   <div class="mc-card">
+    <div class="row between"><div><div class="eyebrow">Motion tracking</div><div class="h2" id="mcTitle" style="margin-top:4px">Results</div></div>
+      <button class="icon-btn sm" id="mcClose" aria-label="Back to tracking"><svg viewBox="0 0 24 24"><path d="M6 6l12 12M18 6 6 18"/></svg></button></div>
+    <p class="small dim" id="mcSub" style="margin-top:8px"></p>
+    <div id="mcList"></div>
+    <div class="row gap-8" style="margin-top:18px">
+      <button class="btn btn-primary" id="mcAgain" type="button">Track again</button>
+      <button class="btn btn-ghost" id="mcExport" type="button">Export log</button>
+    </div>
+   </div>
+  </div>
+ </div>
+</div>
