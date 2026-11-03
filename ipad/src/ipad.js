@@ -108,6 +108,9 @@
     shape(); camCheck();
   }
 
+  // ten swings in: give the last read a moment on screen, then the results
+  window.addEventListener('orvia:setdone', ()=>{ setTimeout(()=>{ if(running) stop(); }, 4500); });
+
   camCheck();
   $('#mcEnd').addEventListener('click',()=>running?stop():start(false));
   $('#mcDemo').addEventListener('click',()=>start(true));

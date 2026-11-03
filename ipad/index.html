@@ -1101,6 +1101,24 @@ svg.mk-layer{position:absolute;inset:0;width:100%;height:100%;overflow:visible;t
 .zc-camcard button{height:34px;padding:0 14px;border-radius:99px;background:var(--lime,#3F5F58);color:var(--lime-ink,#F4F2E6);font-size:12.5px;font-weight:650}
 .zc-camcard[hidden]{display:none}
 
+/* the instant read after every swing — dark glass, same family as the chip and the camera card */
+.zc-swing{position:absolute;z-index:7;top:50px;left:50%;transform:translate(-50%,-6px);opacity:0;pointer-events:none;
+  min-width:210px;max-width:calc(100% - 28px);padding:10px 12px 9px;border-radius:18px;
+  background:rgba(7,16,11,.8);border:1px solid rgba(244,242,230,.16);box-shadow:0 12px 30px rgba(0,0,0,.42);
+  -webkit-backdrop-filter:blur(10px);backdrop-filter:blur(10px);color:#EEF1E8;
+  transition:opacity .3s ease,transform .3s cubic-bezier(.2,.8,.25,1)}
+.zc-swing.show{opacity:1;transform:translate(-50%,0)}
+.zsw-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-bottom:6px}
+.zsw-n{font-size:10.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;color:rgba(244,246,239,.6)}
+.zsw-score{font-size:22px;font-weight:820;letter-spacing:-.03em;font-variant-numeric:tabular-nums;line-height:1}
+.zsw-score.good{color:#D0FF00}.zsw-score.warn{color:#F1D27A}.zsw-score.bad{color:#F09A7A}
+.zsw-rows{display:grid;gap:4px}
+.zsw-row{display:grid;grid-template-columns:8px 1fr auto;align-items:center;gap:8px;font-size:12px}
+.zsw-row i{width:7px;height:7px;border-radius:50%;background:#D0FF00}
+.zsw-row.warn i{background:#F1D27A}.zsw-row.bad i{background:#F09A7A}
+.zsw-row span{color:rgba(244,246,239,.72);font-weight:560}
+.zsw-row b{font-weight:760;font-variant-numeric:tabular-nums}
+
 /* ORVIA motion tracking — iPad, portrait.
    One fixed 834 × 1194 screen (iPad 11" in points), scaled as a whole to fit the
    viewport so nothing is ever cut; the space around it is plain white. */
@@ -1184,6 +1202,14 @@ body{display:flex;align-items:center;justify-content:center;overflow:hidden;back
 .mc-grid b{font-size:17px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
 .mc-grid .warn b{color:var(--warn)} .mc-grid .bad b{color:#B4532E}
 .mc-card .btn{height:54px;font-size:16px}
+
+/* per-swing read, iPad size */
+.ipad-screen .zc-swing{top:62px;min-width:300px;padding:14px 18px 13px;border-radius:24px}
+.ipad-screen .zsw-n{font-size:12.5px}
+.ipad-screen .zsw-score{font-size:32px}
+.ipad-screen .zsw-row{font-size:15px;gap:10px;grid-template-columns:9px 1fr auto}
+.ipad-screen .zsw-row i{width:9px;height:9px}
+.ipad-screen .zsw-rows{gap:6px}
 </style></head>
 <body>
 <div class="ipad-fit" id="ipadFit">
@@ -1355,8 +1381,10 @@ function createEngine(modeName, handed){
   function setPhase(p,t,ev,extra){ phase=p; phaseT=t; ev.push(Object.assign({type:'phase',phase:p,t},extra||{})); }
   function addressLike(){
     const shMid=mid(S.lSh,S.rSh), hipMid=mid(S.lHip,S.rHip), h=S.hands;
-    return h.y>shMid.y+0.5*torso && Math.abs(h.x-hipMid.x)<0.55*torso;
+    return feetIn() && h.y>shMid.y+0.5*torso && Math.abs(h.x-hipMid.x)<0.55*torso;
   }
+  // the whole golfer must be in the picture — a seated or half-framed body never starts a swing
+  const feetIn=()=>S.lAnk.v>=0.4 && S.rAnk.v>=0.4;
   function captureAddress(t){
     const s=side();
     A={t, hands:{x:S.hands.x,y:S.hands.y}, nose:{x:S.nose.x,y:S.nose.y},
@@ -1470,7 +1498,7 @@ function createEngine(modeName, handed){
         break;
       }
     }
-    return {phase, live:(A||phase==='finish')?measure():null, events:ev, dNorm:T?d/T:0,
+    return {phase, feet:feetIn(), live:(A||phase==='finish')?measure():null, events:ev, dNorm:T?d/T:0,
             dbg:{vis:Math.min(S.lSh.v,S.rSh.v,S.lHip.v,S.rHip.v,S.lWr.v,S.rWr.v), torso, still, speed:speedPx/(torso||1)}};
   }
 
@@ -1899,7 +1927,7 @@ function frame(lm, now, src){
   if(!r.held){
     const want=L.engine.address||ph==='finish'?1:0; L.laser+=(want-L.laser)*.12;
     setChip(chipText(ph, lm));
-    hintFor(ph, lm);
+    hintFor(ph, lm, r);
   }
   drawCam(lm, r);
   drawStand(lm, r);
@@ -1919,11 +1947,14 @@ function phaseName(ph){
            downswing:P?'Forward':'Downswing', impact:'Impact', through:'Through', finish:'Finish', idle:'Standby'})[ph]||ph;
 }
 let _hint='';
-function hintFor(ph, lm){
+function hintFor(ph, lm, r){
   if(!L.cam || !L.cam.hint) return;
+  const n=L.swings.length, more=n>0 && n<L.sets;
   const h = L.source==='demo' ? (L.demoReason==='Demo'?'Demo golfer — no camera in use':L.demoReason+' · demo golfer')
           : !lm||ph==='idle' ? 'Keep your whole body inside the frame'
-          : ph==='ready' ? 'Hold your address for a beat — the laser locks on'
+          : (ph==='ready'||ph==='finish') && r && r.feet===false ? 'Step back until your feet are in the frame'
+          : ph==='finish' ? (n>=L.sets ? 'Set complete' : `Swing ${n} done — set up again for swing ${n+1}`)
+          : ph==='ready' ? (more ? `Address the ball for swing ${n+1} of ${L.sets}` : 'Hold your address for a beat — the laser locks on')
           : ph==='address' ? 'Swing when you’re ready'
           : '';
   if(h!==_hint){ _hint=h; L.cam.hint.textContent=h; L.cam.hint.classList.toggle('off',!h); }
@@ -1942,7 +1973,7 @@ function note(text, ms){
 function onEvent(e, lm){
   if(L.log && e.type!=='swing') L.log.events.push([Math.round(e.t-L.t0), e.type, e.phase||'']);
   if(e.type==='phase'){
-    if(e.phase==='address'){ L.trail=[]; L.curFrames={}; SND.lock(); if(!L._saidLaser){ L._saidLaser=true; say('Laser on. Swing when ready.'); } }
+    if(e.phase==='address'){ if(L.swings.length<L.sets) hideSwingCard(); L.trail=[]; L.curFrames={}; SND.lock(); if(!L._saidLaser){ L._saidLaser=true; say('Laser on. Swing when ready.'); } }
     if(e.phase==='downswing') SND.whoosh(MODES[L.mode].type==='putt'?.25:.32);
     if(L.stand) L.stand.setPhase(e.phase);
   } else if(e.type==='capture'){
@@ -1968,13 +1999,40 @@ function onSwing(rep){
   const tEl=document.getElementById('zsTempo');
   if(tEl) tEl.innerHTML=`${rep.tempo.ratio.toFixed(1)}<span class="zs-sets-tot">:1</span>`;
   setTitle(rep.coach.text);
+  swingCard(rep, n);
   if(L.stand) L.stand.swing(rep);
   const done = n===L.sets;
   setTimeout(()=>say(done ? `${rep.coach.text} That’s the set — end the session for your report.` : rep.coach.text), 450);
-  if(done){ const b=L.zs&&L.zs.querySelector('.zs-end'); if(b) b.textContent='End session — see your report'; }
+  if(done){ const b=L.zs&&L.zs.querySelector('.zs-end'); if(b) b.textContent='End session — see your report';
+    SND.lock(); try{ window.dispatchEvent(new CustomEvent('orvia:setdone',{detail:{swings:n}})); }catch(e){} }
   // cut the silhouettes out of this swing's frames while the golfer resets
   setTimeout(()=>refineFrames(rep), 700);
 }
+
+/* the instant read after every swing — sits in the camera window until the next address */
+const CARD_LAB={tempo:'Tempo',shoulder:'Shoulder turn',hip:'Hip turn',leadArm:'Lead arm',head:'Head',wTop:'Weight · top',
+  wImp:'Weight · impact',tilt:'Spine tilt',wFin:'Finish',sway:'Sway',rock:'Rock',wrist:'Wrist'};
+function cardVal(k,v){
+  if(k==='tempo') return v.toFixed(1)+':1';
+  if(k==='head'||k==='sway') return v.toFixed(1)+' cm';
+  if(/^w/.test(k)&&k!=='wrist') return Math.round(v)+'%';
+  return Math.round(v)+'°';
+}
+let _cardT=0;
+function swingCard(rep, n){
+  if(!L.cam||!L.cam.win) return;
+  let el=L.cam.win.querySelector('.zc-swing');
+  if(!el){ L.cam.win.insertAdjacentHTML('beforeend','<div class="zc-swing" aria-live="polite"></div>'); el=L.cam.win.querySelector('.zc-swing'); }
+  const rank={bad:0,warn:1,good:2}, c=rep.checks;
+  const rest=Object.keys(c).filter(k=>k!=='tempo').sort((a,b)=>rank[c[a].st]-rank[c[b].st]).slice(0,2);
+  const keys=(c.tempo?['tempo']:[]).concat(rest);
+  const done=n>=L.sets;
+  el.innerHTML=`<div class="zsw-head"><span class="zsw-n">${done?'Set complete':'Swing '+n+' of '+L.sets}</span><b class="zsw-score ${rep.score>=85?'good':rep.score>=65?'warn':'bad'}">${rep.score}</b></div>
+    <div class="zsw-rows">${keys.map(k=>`<div class="zsw-row ${c[k].st}"><i></i><span>${CARD_LAB[k]||k}</span><b>${cardVal(k,c[k].v)}</b></div>`).join('')}</div>`;
+  el.classList.remove('show'); void el.offsetWidth; el.classList.add('show');
+  clearTimeout(_cardT); _cardT=setTimeout(()=>el.classList.remove('show'), done?9000:5200);
+}
+function hideSwingCard(){ const el=L.cam&&L.cam.win&&L.cam.win.querySelector('.zc-swing'); if(el) el.classList.remove('show'); }
 
 function setTitle(text){
   const t=L.zs&&L.zs.querySelector('.zs-title'); if(!t) return;
@@ -2209,7 +2267,7 @@ function mapper(w,h,cover){
   const s = cover ? Math.max(w/L.fw, h/L.fh) : Math.min(w/L.fw, h/L.fh)*0.98;
   const ox=(w-L.fw*s)/2, oy=(h-L.fh*s)/2 + (cover?0:h*.02);
   const mirror = L.source==='camera' && L.facing==='user';
-  return {s, f:p=>{ const x=ox+p.x*s; return {x:mirror?w-x:x, y:oy+p.y*s}; }};
+  return {s, f:p=>{ const x=ox+p.x*s; return {x:mirror?w-x:x, y:oy+p.y*s, v:p.v==null?1:p.v}; }};
 }
 // skeleton = the system's joint-recognition token (--skel #D0FF00): crisp over a live feed
 const C={ bone:'#D0FF00', joint:'#D0FF00', jointFill:'#07100b', laser:'#C6E74C', ink:'#EEF1E8', dim:'rgba(244,246,239,.55)' };
@@ -2223,21 +2281,22 @@ function drawFigure(g, P, torso, scale){
     g.beginPath(); [11,12,24,23].forEach((i,k)=>k?g.lineTo(P[i].x,P[i].y):g.moveTo(P[i].x,P[i].y)); g.closePath(); g.fill();
     g.beginPath(); g.arc(P[0].x,P[0].y-torso*.04,torso*.2,0,Math.PI*2); g.fill(); g.restore();
   }
+  const seen=i=>!(P[i].v<0.35), bones=BONES.filter(([a,b])=>seen(a)&&seen(b));
   g.save(); g.lineCap='round';
   g.strokeStyle='rgba(2,6,3,.5)'; g.lineWidth=2.6*scale+3;
-  BONES.forEach(([a,b])=>{ g.beginPath(); g.moveTo(P[a].x,P[a].y); g.lineTo(P[b].x,P[b].y); g.stroke(); });
+  bones.forEach(([a,b])=>{ g.beginPath(); g.moveTo(P[a].x,P[a].y); g.lineTo(P[b].x,P[b].y); g.stroke(); });
   g.strokeStyle=C.bone; g.globalAlpha=.95; g.lineWidth=2.4*scale;
-  BONES.forEach(([a,b])=>{ g.beginPath(); g.moveTo(P[a].x,P[a].y); g.lineTo(P[b].x,P[b].y); g.stroke(); });
+  bones.forEach(([a,b])=>{ g.beginPath(); g.moveTo(P[a].x,P[a].y); g.lineTo(P[b].x,P[b].y); g.stroke(); });
   const sh=mid(P[11],P[12]);
   g.beginPath(); g.moveTo(sh.x,sh.y); g.lineTo(P[0].x,P[0].y+torso*.1); g.stroke();
   g.beginPath(); g.arc(P[0].x,P[0].y-torso*.03,torso*.15,0,Math.PI*2); g.stroke();
   g.globalAlpha=1;
-  JOINTS.forEach(i=>{ g.beginPath(); g.arc(P[i].x,P[i].y,4.2*scale,0,Math.PI*2);
+  JOINTS.filter(seen).forEach(i=>{ g.beginPath(); g.arc(P[i].x,P[i].y,4.2*scale,0,Math.PI*2);
     g.fillStyle=C.jointFill; g.fill(); g.lineWidth=2*scale; g.strokeStyle=C.joint; g.stroke(); });
   g.restore();
 }
 function drawLaser(g, P, torso, scale){
-  if(L.laser<.02) return;
+  if(L.laser<.02 || P[27].v<0.35 || P[28].v<0.35) return;
   const bx=(P[27].x+P[28].x)/2, by=Math.max(P[27].y,P[28].y)+torso*.09, half=torso*1.7;
   g.save(); g.globalAlpha=L.laser;
   g.shadowColor='rgba(198,231,76,.9)'; g.shadowBlur=10*scale;
@@ -2648,6 +2707,9 @@ window.Live = Live;
     const chip=zs.querySelector('.zc-chip'); if(chip) chip.innerHTML='<i></i>Ready';
     shape(); camCheck();
   }
+
+  // ten swings in: give the last read a moment on screen, then the results
+  window.addEventListener('orvia:setdone', ()=>{ setTimeout(()=>{ if(running) stop(); }, 4500); });
 
   camCheck();
   $('#mcEnd').addEventListener('click',()=>running?stop():start(false));

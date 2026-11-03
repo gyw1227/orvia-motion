@@ -81,3 +81,11 @@ body{display:flex;align-items:center;justify-content:center;overflow:hidden;back
 .mc-grid b{font-size:17px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
 .mc-grid .warn b{color:var(--warn)} .mc-grid .bad b{color:#B4532E}
 .mc-card .btn{height:54px;font-size:16px}
+
+/* per-swing read, iPad size */
+.ipad-screen .zc-swing{top:62px;min-width:300px;padding:14px 18px 13px;border-radius:24px}
+.ipad-screen .zsw-n{font-size:12.5px}
+.ipad-screen .zsw-score{font-size:32px}
+.ipad-screen .zsw-row{font-size:15px;gap:10px;grid-template-columns:9px 1fr auto}
+.ipad-screen .zsw-row i{width:9px;height:9px}
+.ipad-screen .zsw-rows{gap:6px}
