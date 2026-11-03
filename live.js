@@ -535,14 +535,16 @@ function attachCam(){
     <div class="zc-note" aria-live="polite"></div>
     <pre class="zc-debug" hidden></pre>
     <button type="button" class="zc-log" hidden>Export log</button>
+    <div class="zc-camcard" hidden role="alertdialog" aria-live="assertive"><b></b><p></p><button type="button">Keep the demo</button></div>
     <button type="button" class="zc-camon" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7.5h3l1.6-2h8.8l1.6 2h3v11H3z"/><circle cx="12" cy="13" r="3.6"/></svg><span>Turn on camera</span></button>`);
   win.querySelectorAll('.zc-modes button').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode,true)));
   win.querySelector('.zc-log').addEventListener('click', exportLog);
   win.querySelector('.zc-camon').addEventListener('click', retryCamera);
+  win.querySelector('.zc-camcard button').addEventListener('click', ()=>{ L.cam.card.hidden=true; });
   wireDebugTap(win.querySelector('.zc-chip'));
   L.cam={win, video:win.querySelector('.zc-video'), cv:win.querySelector('.zc-canvas'), dbg:win.querySelector('.zc-debug'), logBtn:win.querySelector('.zc-log'),
          chip:win.parentElement.querySelector('.zc-chip')||win.querySelector('.zc-chip'),
-         hint:win.querySelector('.zc-hint'), note:win.querySelector('.zc-note'), camon:win.querySelector('.zc-camon')};
+         hint:win.querySelector('.zc-hint'), note:win.querySelector('.zc-note'), camon:win.querySelector('.zc-camon'), card:win.querySelector('.zc-camcard')};
   startSource();
 }
 
@@ -551,8 +553,12 @@ function startSource(){
   if(L.cam&&L.cam.camon) L.cam.camon.hidden=true;
   setChip('Starting camera');
   if(L.forceDemo){ startDemo('Demo'); return; }
-  if(!wantCam){ startDemo(window.isSecureContext?'No camera on this device':'Camera needs an https address'); return; }
-  navigator.mediaDevices.getUserMedia({audio:false, video:{facingMode:L.facing, width:{ideal:1280}, height:{ideal:720}, frameRate:{ideal:60,max:60}}})
+  if(!wantCam){ const w=window.isSecureContext?'No camera on this device':'Camera needs an https address'; startDemo(w); if(L.asked) camCard(w,false); return; }
+  const gum=navigator.mediaDevices.getUserMedia({audio:false, video:{facingMode:L.facing, width:{ideal:1280}, height:{ideal:720}, frameRate:{ideal:60,max:60}}});
+  let timedOut=false;
+  const tmo=new Promise((_,rej)=>setTimeout(()=>{ timedOut=true; rej(Object.assign(new Error('timeout'),{name:'TimeoutError'})); }, 9000));
+  gum.then(s=>{ if(timedOut) s.getTracks().forEach(t=>t.stop()); }).catch(()=>{});
+  Promise.race([gum,tmo])
     .then(s=>{
       if(!L.on){ s.getTracks().forEach(t=>t.stop()); return; }
       L.stream=s;
@@ -573,12 +579,31 @@ function startSource(){
       if(L.stream){ L.stream.getTracks().forEach(t=>t.stop()); L.stream=null; }
       const n=e&&e.name;
       let framed=false; try{ framed=window.top!==window.self; }catch(_){ framed=true; }
-      startDemo(n==='NotAllowedError'||n==='SecurityError' ? (framed ? 'This preview can’t open the camera — use the site link' : 'Camera blocked — allow it in the browser settings') : n==='NotFoundError' ? 'No camera found' : 'Tracker offline — check the connection');
+      const why = n==='NotAllowedError'||n==='SecurityError' ? (framed ? 'This preview can’t open the camera — use the site link' : 'Camera blocked — allow it in the browser settings')
+                : n==='NotFoundError' ? 'No camera found' : n==='TimeoutError' ? 'The camera didn’t answer' : 'Tracker offline — check the connection';
+      startDemo(why);
+      if(L.asked) camCard(why, framed);
     });
+}
+const CARD_BODY={
+  preview:'Claude’s preview window doesn’t give pages the camera. Open the site link (https) in Safari or Chrome on the phone or iPad.',
+  blocked:'Allow camera access for this site in the browser’s settings, then tap Turn on camera again.',
+  none:'This device has no camera the browser can use.',
+  slow:'The browser never answered the camera request. Reload the page and try again.',
+  offline:'The camera is fine, but the motion tracker couldn’t load. Check the internet connection.'
+};
+function camCard(why, framed){
+  if(!L.cam||!L.cam.card) return;
+  const k = /preview/.test(why)||(framed&&/blocked/i.test(why)) ? 'preview' : /blocked/i.test(why) ? 'blocked'
+          : /No camera/.test(why) ? 'none' : /answer/.test(why) ? 'slow' : /https/.test(why) ? 'preview' : 'offline';
+  L.cam.card.querySelector('b').textContent = k==='offline' ? 'Tracker didn’t load' : 'Camera isn’t available here';
+  L.cam.card.querySelector('p').textContent = CARD_BODY[k];
+  L.cam.card.hidden=false;
 }
 // the on-screen camera switch — runs from the tap, so the browser can ask for permission
 function retryCamera(){
   if(!L.on) return;
+  L.asked=true; if(L.cam&&L.cam.card) L.cam.card.hidden=true;
   cancelAnimationFrame(L.raf); L.raf=0; L.forceDemo=false; L.demo=null; L.source='starting';
   // demo swings don't count once a real camera takes over
   L.engine=createEngine(L.mode, L.handed); L.swings=[]; L.trail=[]; L.flashes=[];
