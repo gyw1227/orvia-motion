@@ -398,7 +398,7 @@ const SND={
 };
 
 /* ================================================================== VOICE */
-let voiceOn=true, voicePick=null;
+let voiceOn=false, voicePick=null;   // spoken coaching off — the line still shows on screen
 function pickVoice(){
   try{
     const vs=speechSynthesis.getVoices();
@@ -534,18 +534,21 @@ function attachCam(){
       `<button type="button" role="radio" data-mode="${n}" aria-checked="${n===L.mode}">${MODES[n].short}</button>`).join('')}</div>
     <div class="zc-note" aria-live="polite"></div>
     <pre class="zc-debug" hidden></pre>
-    <button type="button" class="zc-log" hidden>Export log</button>`);
+    <button type="button" class="zc-log" hidden>Export log</button>
+    <button type="button" class="zc-camon" hidden><svg viewBox="0 0 24 24" aria-hidden="true"><path d="M3 7.5h3l1.6-2h8.8l1.6 2h3v11H3z"/><circle cx="12" cy="13" r="3.6"/></svg><span>Turn on camera</span></button>`);
   win.querySelectorAll('.zc-modes button').forEach(b=>b.addEventListener('click',()=>setMode(b.dataset.mode,true)));
   win.querySelector('.zc-log').addEventListener('click', exportLog);
+  win.querySelector('.zc-camon').addEventListener('click', retryCamera);
   wireDebugTap(win.querySelector('.zc-chip'));
   L.cam={win, video:win.querySelector('.zc-video'), cv:win.querySelector('.zc-canvas'), dbg:win.querySelector('.zc-debug'), logBtn:win.querySelector('.zc-log'),
          chip:win.parentElement.querySelector('.zc-chip')||win.querySelector('.zc-chip'),
-         hint:win.querySelector('.zc-hint'), note:win.querySelector('.zc-note')};
+         hint:win.querySelector('.zc-hint'), note:win.querySelector('.zc-note'), camon:win.querySelector('.zc-camon')};
   startSource();
 }
 
 function startSource(){
   const wantCam = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) && window.isSecureContext;
+  if(L.cam&&L.cam.camon) L.cam.camon.hidden=true;
   setChip('Starting camera');
   if(L.forceDemo){ startDemo('Demo'); return; }
   if(!wantCam){ startDemo(window.isSecureContext?'No camera on this device':'Camera needs an https address'); return; }
@@ -569,8 +572,20 @@ function startSource(){
     .catch(e=>{
       if(L.stream){ L.stream.getTracks().forEach(t=>t.stop()); L.stream=null; }
       const n=e&&e.name;
-      startDemo(n==='NotAllowedError'||n==='SecurityError' ? 'Camera blocked here — allow it, or open the https site' : n==='NotFoundError' ? 'No camera found' : 'Tracker offline — check the connection');
+      let framed=false; try{ framed=window.top!==window.self; }catch(_){ framed=true; }
+      startDemo(n==='NotAllowedError'||n==='SecurityError' ? (framed ? 'This preview can’t open the camera — use the site link' : 'Camera blocked — allow it in the browser settings') : n==='NotFoundError' ? 'No camera found' : 'Tracker offline — check the connection');
     });
+}
+// the on-screen camera switch — runs from the tap, so the browser can ask for permission
+function retryCamera(){
+  if(!L.on) return;
+  cancelAnimationFrame(L.raf); L.raf=0; L.forceDemo=false; L.demo=null; L.source='starting';
+  // demo swings don't count once a real camera takes over
+  L.engine=createEngine(L.mode, L.handed); L.swings=[]; L.trail=[]; L.flashes=[];
+  const se=document.querySelector('#zsSets'); if(se) se.innerHTML=`0<span class="zs-sets-tot"> / ${L.sets}</span>`;
+  if(L.cam) L.cam.win.classList.remove('is-demo');
+  if(L.stand) L.stand.el.classList.remove('is-demo');
+  startSource();
 }
 function startDemo(reason){
   if(!L.on) return;
@@ -579,6 +594,7 @@ function startDemo(reason){
   if(L.cam) L.cam.win.classList.add('is-demo');
   if(L.stand) L.stand.el.classList.add('is-demo');
   setChip('Demo golfer');
+  if(L.cam&&L.cam.camon) L.cam.camon.hidden=false;   // a camera switch is always on screen while the demo plays
   if(reason!=='Demo') note(`${reason}`, 4200);
   L.raf=requestAnimationFrame(loopDemo);
 }
