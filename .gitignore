@@ -1,3 +1,8 @@
 node_modules/
 .DS_Store
 Thumbs.db
+
+# kept out of the public repo: planning doc, unused source logo, artifact build output
+*.docx
+오르비아 로고.png
+calibr-artifact.html
