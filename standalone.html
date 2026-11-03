@@ -1512,14 +1512,15 @@ function demoPose(t,type,vi,handed){
     shift=lerp(P?0:30*v.shift,P?0:46*Math.max(.6,v.shift),r); head=v.head*.6*(1-r); }
   if(P){ sT=0; hT=0; shift=0; }
   const dir=handed==='L'?-1:1, X=x=>cx+(x-cx)*dir;
-  const shHW=76*Math.cos(sT/DEG)+4, hipHW=54*Math.cos(hT/DEG)+3;
+  // slimmer build: shoulders ≈ ¼ of standing height, hips narrower again
+  const shHW=54*Math.cos(sT/DEG)+3, hipHW=36*Math.cos(hT/DEG)+2;
   const shC={x:cx+shift*.55-lean, y:shY+(P?18:0)}, rock=P?(phi-90)*.9:0;
   const lS={x:shC.x+shHW,y:shC.y-rock}, tS={x:shC.x-shHW,y:shC.y+rock};
   const hand={x:shC.x+Math.cos(phi/DEG)*rad, y:shC.y+Math.sin(phi/DEG)*rad};
   const lE=ik(lS,hand,101-arm*.5,101-arm*.5,-1), tE=ik(tS,hand,100,100,1);
   const hipC={x:cx+shift,y:hipY}, lH={x:hipC.x+hipHW,y:hipY}, tH={x:hipC.x-hipHW,y:hipY};
-  const lA={x:cx+78,y:ankY}, tA={x:cx-78,y:ankY};
-  const lK={x:(lH.x+lA.x)/2+10,y:(hipY+ankY)/2}, tK={x:(tH.x+tA.x)/2-10,y:(hipY+ankY)/2};
+  const lA={x:cx+60,y:ankY}, tA={x:cx-60,y:ankY};
+  const lK={x:(lH.x+lA.x)/2+6,y:(hipY+ankY)/2}, tK={x:(tH.x+tA.x)/2-6,y:(hipY+ankY)/2};
   const nose={x:cx+head+shift*.15, y:196+(P?26:0)};
   const out=new Array(33), set=(i,p)=>{ out[i]={x:X(p.x),y:p.y,v:1}; };
   set(0,nose);
@@ -1529,7 +1530,7 @@ function demoPose(t,type,vi,handed){
   for(let k=17;k<=22;k++) set(k,{x:hand.x,y:hand.y+6});
   set(23,lH); set(24,tH); set(25,lK); set(26,tK); set(27,lA); set(28,tA);
   set(29,{x:lA.x-8,y:ankY+12}); set(30,{x:tA.x+8,y:ankY+12});
-  set(31,{x:lA.x+22,y:ankY+14}); set(32,{x:tA.x-22,y:ankY+14});
+  set(31,{x:lA.x+18,y:ankY+14}); set(32,{x:tA.x-18,y:ankY+14});
   if(handed==='L') [[11,12],[13,14],[15,16],[23,24],[25,26],[27,28],[29,30],[31,32]]
     .forEach(([a,b])=>{ const tmp=out[a]; out[a]=out[b]; out[b]=tmp; });
   return out;
@@ -2056,11 +2057,14 @@ function capsuleMask(lm, torso){
   const m=document.createElement('canvas'); m.width=CW; m.height=CH;
   const g=m.getContext('2d'), s=CW/FW;
   g.scale(s,s); g.fillStyle=g.strokeStyle='#000'; g.lineCap=g.lineJoin='round';
-  const lw=Math.max(7,torso*(L.source==='demo'?.19:.27)); g.lineWidth=lw;
+  const lw=Math.max(6,torso*(L.source==='demo'?.15:.22)); g.lineWidth=lw;
   BONES.forEach(([a,b])=>{ g.beginPath(); g.moveTo(lm[a].x,lm[a].y); g.lineTo(lm[b].x,lm[b].y); g.stroke(); });
-  g.beginPath(); [11,12,24,23].forEach((i,k)=>k?g.lineTo(lm[i].x,lm[i].y):g.moveTo(lm[i].x,lm[i].y)); g.closePath(); g.fill(); g.lineWidth=lw*.9; g.stroke();
+  // torso: shoulders pulled 12% in toward the spine so the chest reads as a body, not a box
+  const sc=mid(lm[11],lm[12]), hc=mid(lm[23],lm[24]), inT=(p,c,k)=>({x:c.x+(p.x-c.x)*k, y:c.y+(p.y-c.y)*k});
+  const tq=[inT(lm[11],sc,.88), inT(lm[12],sc,.88), inT(lm[24],hc,.94), inT(lm[23],hc,.94)];
+  g.beginPath(); tq.forEach((p,k)=>k?g.lineTo(p.x,p.y):g.moveTo(p.x,p.y)); g.closePath(); g.fill(); g.lineWidth=lw*.7; g.stroke();
   const sh=mid(lm[11],lm[12]); g.lineWidth=lw*.85; g.beginPath(); g.moveTo(sh.x,sh.y); g.lineTo(lm[0].x,lm[0].y); g.stroke();
-  g.beginPath(); g.arc(lm[0].x, lm[0].y-torso*.05, torso*.21, 0, Math.PI*2); g.fill();
+  g.beginPath(); g.arc(lm[0].x, lm[0].y-torso*.05, torso*.185, 0, Math.PI*2); g.fill();
   return g.getImageData(0,0,CW,CH).data;   // alpha channel = coverage
 }
 function halftone(srcCv, maskData, maskIsFloat){
@@ -2201,10 +2205,10 @@ function drawFigure(g, P, torso, scale){
   // silhouette under the skeleton for the demo golfer, so it reads as a body
   if(L.source==='demo'){
     g.save(); g.fillStyle=g.strokeStyle='rgba(208,255,0,.08)'; g.lineCap=g.lineJoin='round';
-    const lw=Math.max(6,torso*.26); g.lineWidth=lw;
+    const lw=Math.max(5,torso*.19); g.lineWidth=lw;
     BONES.forEach(([a,b])=>{ g.beginPath(); g.moveTo(P[a].x,P[a].y); g.lineTo(P[b].x,P[b].y); g.stroke(); });
     g.beginPath(); [11,12,24,23].forEach((i,k)=>k?g.lineTo(P[i].x,P[i].y):g.moveTo(P[i].x,P[i].y)); g.closePath(); g.fill();
-    g.beginPath(); g.arc(P[0].x,P[0].y-torso*.04,torso*.2,0,Math.PI*2); g.fill(); g.restore();
+    g.beginPath(); g.arc(P[0].x,P[0].y-torso*.04,torso*.18,0,Math.PI*2); g.fill(); g.restore();
   }
   const seen=i=>!(P[i].v<0.35), bones=BONES.filter(([a,b])=>seen(a)&&seen(b));
   g.save(); g.lineCap='round';
@@ -2262,7 +2266,7 @@ function paintDemoSource(lm){
   const g=demoCv.getContext('2d'); g.clearRect(0,0,DW,DH);
   const T=torsoOf(lm), grd=g.createLinearGradient(0,150,0,680);
   grd.addColorStop(0,'#3A4036'); grd.addColorStop(.45,'#8C9284'); grd.addColorStop(1,'#3A4036');
-  g.fillStyle=g.strokeStyle=grd; g.lineCap=g.lineJoin='round'; g.lineWidth=T*.19;
+  g.fillStyle=g.strokeStyle=grd; g.lineCap=g.lineJoin='round'; g.lineWidth=T*.15;
   BONES.forEach(([a,b])=>{ g.beginPath(); g.moveTo(lm[a].x,lm[a].y); g.lineTo(lm[b].x,lm[b].y); g.stroke(); });
   g.beginPath(); [11,12,24,23].forEach((i,k)=>k?g.lineTo(lm[i].x,lm[i].y):g.moveTo(lm[i].x,lm[i].y)); g.closePath(); g.fill();
   g.beginPath(); g.arc(lm[0].x,lm[0].y-T*.05,T*.21,0,Math.PI*2); g.fill();
