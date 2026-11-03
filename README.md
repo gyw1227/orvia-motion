@@ -19,11 +19,44 @@ Pure HTML/CSS/JS — **no build step, no dependencies.**
 - **Source version:** open `index.html`. If your browser blocks the local
   `styles.css` / `app.js` over `file://`, serve the folder over HTTP, e.g. any
   static server pointed at this directory, then open `/index.html`.
+- After editing `styles.css` / `app.js`, run `node build-standalone.js` to
+  regenerate `standalone.html` (it inlines both files plus the two local
+  images as base64, so the single-file build stays in sync with the source).
 
 ### Deep-link query params (handy for demos)
 - `?screen=home|report|growth|profile` — jump straight to a screen (skips onboarding)
 - `?tab=calendar|metrics|ba` — pick the Growth sub-tab
 - `?ob=0` — start on Home without onboarding
+
+## Live tracking (iPad camera)
+
+The session flow is unchanged — **START → count-in → camera window → End session → Session Report** —
+but the camera window is now real (`live.js`):
+
+- **Camera window** (`.zc-feed`): the iPad's front camera, mirrored, with the joint skeleton drawn in the
+  app's own camera style, the floor **laser** line (locks on when you hold your address), and the hands' path.
+- **Readouts**: *Sets* counts real swings (e.g. 3 / 10) and a third column shows the last swing's **Tempo**.
+- **Coach**: after every swing the session title becomes one coaching line, and the same line is **spoken**.
+- **Balance dial**: a segmented control along the window's foot (Driver · Wood · Hybrid · Iron · Wedge · Putt).
+  Switching plays the ball-screw motor, moves the weight (290 → 640 mm) and changes the targets the swing is
+  judged against. Impact plays the **haptic** pulse as sound.
+- **Stand camera** (iPad landscape only): the stand's own view, large, beside the phone — phase, joint
+  angles drawn on the body, weight bar between the feet, and the last swing's numbers.
+- **Session Report**: built from the swings that were tracked — the halftone avatar and *Posture by phase*
+  show **this golfer's** seven stills (cut out with the segmentation model, drawn on the artwork's dot grid),
+  the joint dots and flagged callouts come from their landmarks, and the four metrics, key finding and
+  mission success are computed from the session. Putting sessions fill the putting report.
+
+**Running it on an iPad:** the camera needs a secure address. Host the folder (or just `standalone.html`)
+on any HTTPS host — GitHub Pages, Netlify Drop — and open it in Safari; allow the camera when asked. Stand
+2.5–3 m from the iPad, whole body in frame. The pose model (MediaPipe Pose Landmarker, full) loads from the
+CDN on first use; for an offline exhibition, put `pose_landmarker_full.task` next to `index.html`.
+Without a camera (or inside a preview that blocks it) a **demo golfer** swings instead and every surface
+says so. Everything runs on the device — no video leaves it.
+
+Metrics are face-on estimates from 2-D joint positions: rotation from the shoulders' / hips' projected
+width, weight from the hips' position between the feet, head drift in cm against a 39 cm shoulder width,
+tempo from the hands' path, and release from when hand speed peaks before the strike.
 
 ## What's inside
 
@@ -45,7 +78,7 @@ phone down — come back after"), which then leads to the Session Report.
 
 ## Design
 
-- Deep warm near-black ground + a single lime/chartreuse accent (`#CDF23F`).
+- Warm ivory/white gradient ground + a single lime/chartreuse accent (`#8BC63E`).
 - Frosted-glass bento: translucent cards, `backdrop-filter` blur, 1px light
   borders, in-phone light so glass reads. One lime-filled card per screen for
   asymmetric emphasis; hero-sized numerals for key figures (D-day, success rate).

@@ -1,89 +1,91 @@
 /* =========================================================================
-   CALIBR — Posture Coach
-   Deep-black + single teal accent (Aruba Blue). Frosted-glass bento.
-   Note: the --lime* token names are retained for the teal accent (legacy).
+   ARVIA — Posture Coach
+   Soft green mesh gradient on white + a single accent inspired by
+   PANTONE 13-0535 TPG "Sharp Green". Frosted-glass bento.
    Pure CSS. Icons/charts are inline SVG (see app.js).
    ========================================================================= */
 
 :root{
-  /* Color */
-  --bg:#0B0C08;
-  --bg-2:#0E0F0B;
-  --ink:#F5F6F0;
-  --muted:#8E927E;
-  --muted-2:#5E6156;
-  --lime:#87D8CE;           /* accent — Aruba Blue (teal / mint) */
-  --lime-hi:#A6E7DF;
-  --lime-deep:#54BEB2;
-  --lime-ink:#04211D;       /* dark text on teal fills */
-  --warn:#F0B54A;           /* caution amber */
-  --warn-soft:rgba(240,181,74,.14);
-  --alert:#FF6B5B;          /* problem joint / phase — red family */
-  --alert-soft:rgba(255,107,91,.15);
-  --mint:#A6E7DF;           /* glow-figure body */
-  /* soft aurora/jelly fill for selected condition items (teal-mint, colors bleeding) */
-  --aurora:radial-gradient(120% 120% at 16% 14%,rgba(186,244,230,.95),transparent 55%),
-           radial-gradient(120% 120% at 86% 24%,rgba(140,206,240,.6),transparent 55%),
-           radial-gradient(130% 130% at 78% 96%,rgba(188,246,208,.72),transparent 55%),
-           radial-gradient(120% 120% at 24% 92%,rgba(96,192,180,.9),transparent 60%),
-           linear-gradient(140deg,#7ad7ca,#4fb6aa);
+  /* Color — deep fairway green accent (was lime / chartreuse) */
+  --bg:#FFFFFF;
+  --pearl:#F4F3F1;   /* app ground — flat off-white */
+  --bg-2:#EEF1E6;
+  --ink:#1B1F14;
+  --muted:#344E4C;
+  --muted-2:#344E4C;
+  --lime:#3F5F58;           /* accent — deep fairway green (fills, dots, bars) */
+  --lime-hi:#E6E9DD;        /* pale sage — soft fills */
+  --lime-deep:#344E4C;      /* deeper accent — used wherever the accent is TEXT on the light ground */
+  --lime-ink:#F4F2E6;       /* bone — text on the green fills */
+  --warn:#9C8A12;           /* caution — deep lemon, readable on a light ground */
+  --warn-soft:rgba(224,206,74,.18);
+  --alert:#3F5F58;          /* problem joint / phase — the point green, at full strength */
+  --alert-soft:rgba(63,95,88,.14);
+  --alert-mark:#3F5F58;     /* the solid point-green dot on a flagged joint */
+  --mint:#DCE7CC;           /* glow-figure body */
+  --skel:#D0FF00;           /* joint-recognition skeleton overlay */
+  /* POINT gradient — the accent-filled boxes (hero cards, selected states, START) */
+  --grad-green:radial-gradient(120% 100% at 12% 0%,rgba(255,255,255,.12),transparent 52%),
+               radial-gradient(120% 120% at 92% 108%,rgba(16,41,47,.28),transparent 60%),
+               linear-gradient(155deg,#547B6E 0%,#41625A 46%,#314C4C 100%);
+  /* soft sage wash for selected chips/moods on the light ground */
+  --aurora:radial-gradient(120% 120% at 18% 12%,#EFF2E6,transparent 62%),
+           radial-gradient(130% 130% at 86% 92%,#DBE2CB,transparent 60%),
+           linear-gradient(150deg,#E9EDDE 0%,#D6DEC4 100%);
 
-  /* Clear glass — transparent fill, light blur, bright edge highlight */
-  --glass:rgba(255,255,255,.07);
-  --glass-2:rgba(255,255,255,.1);
-  --stroke:rgba(255,255,255,.22);
-  --stroke-hi:rgba(255,255,255,.34);
+  /* Clear glass — white fill, light blur, soft dark hairline */
+  --glass:rgba(255,255,255,.55);
+  --glass-2:rgba(255,255,255,.75);
+  --stroke:rgba(20,24,14,.09);
+  --stroke-hi:rgba(20,24,14,.16);
   --blur:9px;
-  --hairline:inset 0 1px 0 rgba(255,255,255,.4);
+  --hairline:inset 0 1px 0 rgba(255,255,255,.9);
 
   /* Radii */
   --r-xl:34px; --r-lg:28px; --r-md:22px; --r-sm:16px; --r-pill:999px;
 
   --sans:-apple-system,BlinkMacSystemFont,"SF Pro Display","SF Pro Text",
-         "Segoe UI","Pretendard","Apple SD Gothic Neo",Roboto,"Helvetica Neue",Arial,sans-serif;
+         "Segoe UI","Apple SD Gothic Neo",Roboto,"Helvetica Neue",Arial,sans-serif;
 
-  --shadow:0 16px 40px -20px rgba(0,0,0,.5);
-  --shadow-lime:0 18px 44px -14px rgba(135,216,206,.42);
+  --shadow:0 16px 40px -20px rgba(30,35,20,.18);
+  --shadow-lime:0 16px 34px -16px rgba(52,78,76,.32);
   --tab-h:80px;
+
+  /* shared "outside the phone" backdrop — plain white on every screen/overlay */
+  --mesh-bg:#ECEBE8;
+  /* shared phone-chassis chrome (drop shadow only — the bezel itself is a
+     real `border` below, so content can never paint over/past it) */
+  --phone-shadow:0 70px 130px -40px rgba(30,35,20,.4),0 0 0 1px rgba(20,24,14,.06);
 }
 
 *{box-sizing:border-box;margin:0;padding:0}
 html,body{height:100%}
 body{
-  font-family:var(--sans);background:#060704;color:var(--ink);
+  font-family:var(--sans);color:var(--ink);
+  background:var(--mesh-bg);
   -webkit-font-smoothing:antialiased;text-rendering:optimizeLegibility;
-  overflow:hidden;display:grid;place-items:center;letter-spacing:-.01em;
+  overflow:hidden;display:grid;place-content:center;place-items:center;letter-spacing:-.01em;
 }
 button{font-family:inherit;color:inherit;cursor:pointer;border:none;background:none;-webkit-tap-highlight-color:transparent}
 input,textarea{font-family:inherit}
-:focus-visible{outline:2px solid var(--lime);outline-offset:2px;border-radius:8px}
+:focus-visible{outline:2px solid var(--lime-deep);outline-offset:2px;border-radius:8px}
 img,svg{max-width:100%}
 
 /* Ambient behind the whole viewport (desktop) */
-.ambient{position:fixed;inset:0;overflow:hidden;pointer-events:none;z-index:0}
+.ambient{display:none}
 .glow{position:absolute;border-radius:50%;filter:blur(90px);opacity:.6}
-.glow-a{width:460px;height:460px;background:radial-gradient(circle,rgba(135,216,206,.20),transparent 70%);top:-140px;right:-120px}
-.glow-b{width:560px;height:560px;background:radial-gradient(circle,rgba(40,115,106,.16),transparent 70%);bottom:-200px;left:-180px}
+.glow-a{width:460px;height:460px;background:radial-gradient(circle,rgba(63,95,88,.20),transparent 70%);top:-140px;right:-120px}
+.glow-b{width:560px;height:560px;background:radial-gradient(circle,rgba(92,130,40,.14),transparent 70%);bottom:-200px;left:-180px}
 
 /* ---- Phone frame ---------------------------------------------------------*/
 .phone{
   position:relative;width:100%;max-width:432px;height:100dvh;max-height:936px;
-  background:linear-gradient(180deg,#0C0D09,#090A06);
+  background:#F4F3F1;
   overflow:hidden;z-index:1;display:flex;flex-direction:column;isolation:isolate;
 }
-/* In-phone colored light so frosted glass has something to bleed */
-.phone::before,.phone::after{content:"";position:absolute;pointer-events:none;z-index:0;filter:blur(6px)}
-.phone::before{top:-40px;right:-50px;width:300px;height:300px;
-  background:radial-gradient(circle,rgba(135,216,206,.16),transparent 68%)}
-.phone::after{bottom:60px;left:-80px;width:340px;height:340px;
-  background:radial-gradient(circle,rgba(45,120,112,.13),transparent 70%)}
-@media(min-width:480px){
-  .phone{height:min(93vh,912px);border-radius:54px;
-    box-shadow:0 70px 130px -40px rgba(0,0,0,.85),inset 0 0 0 10px #040502,0 0 0 1px rgba(255,255,255,.06)}
-  .notch{display:block}
-}
+.phone.on-white{background:#fff}          /* Home sits on plain white */
 .notch{display:none;position:absolute;top:13px;left:50%;transform:translateX(-50%);
-  width:120px;height:30px;background:#040502;border-radius:20px;z-index:40}
+  width:120px;height:30px;background:#14170f;border-radius:20px;z-index:40}
 
 .statusbar{position:relative;z-index:20;flex:0 0 auto;height:52px;
   display:flex;align-items:center;justify-content:space-between;padding:0 28px;
@@ -93,9 +95,10 @@ img,svg{max-width:100%}
 
 /* ---- Screen scroller -----------------------------------------------------*/
 .screen{position:relative;z-index:10;flex:1 1 auto;overflow-y:auto;overflow-x:hidden;
-  padding:4px 18px calc(var(--tab-h) + 30px);scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
+  padding:4px 18px calc(var(--tab-h) + 66px);scroll-behavior:smooth;-webkit-overflow-scrolling:touch}
 .screen::-webkit-scrollbar{width:0}.screen{scrollbar-width:none}
 .screen>*{animation:rise .55s cubic-bezier(.2,.75,.2,1) both}
+.screen.no-anim>*{animation:none}
 .screen>*:nth-child(2){animation-delay:.05s}
 .screen>*:nth-child(3){animation-delay:.10s}
 .screen>*:nth-child(4){animation-delay:.15s}
@@ -106,41 +109,41 @@ img,svg{max-width:100%}
 @keyframes rise{from{opacity:0;transform:translateY(16px)}to{opacity:1;transform:none}}
 
 /* ---- Type ----------------------------------------------------------------*/
-.eyebrow{font-size:10.5px;font-weight:750;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
+.eyebrow{font-size:10.5px;font-weight:600;letter-spacing:.18em;text-transform:uppercase;color:var(--muted)}
 .h1{font-size:29px;font-weight:820;letter-spacing:-.035em;line-height:1.06}
 .h2{font-size:20px;font-weight:780;letter-spacing:-.025em}
 .h3{font-size:15.5px;font-weight:720;letter-spacing:-.015em}
 .body{font-size:14.5px;line-height:1.5}
 .small{font-size:12.5px;line-height:1.45}
-.dim{color:var(--muted)}.dim-2{color:var(--muted-2)}.lime{color:var(--lime)}
+.dim{color:var(--muted)}.dim-2{color:var(--muted-2)}.lime{color:var(--lime-deep)}
 .num{font-variant-numeric:tabular-nums;font-feature-settings:"tnum"}
 .mega{font-size:66px;font-weight:850;letter-spacing:-.055em;line-height:.86;font-variant-numeric:tabular-nums}
 .big{font-size:44px;font-weight:840;letter-spacing:-.04em;line-height:.92;font-variant-numeric:tabular-nums}
 .med{font-size:30px;font-weight:820;letter-spacing:-.035em;line-height:1;font-variant-numeric:tabular-nums}
-.unit{font-size:15px;font-weight:650;color:var(--muted);letter-spacing:0}
+.unit{font-size:15px;font-weight:560;color:var(--muted);letter-spacing:0}
 
-/* ---- Clear glass card (like the reference weather widget) ----------------*/
+/* ---- Card — crisp white on the pearl wash, airy soft shadow -------------*/
 .card{position:relative;
-  background:linear-gradient(152deg,rgba(255,255,255,.13) 0%,rgba(255,255,255,.055) 44%,rgba(255,255,255,.035) 100%);
-  border:1px solid var(--stroke);border-radius:var(--r-lg);padding:18px;
-  backdrop-filter:blur(var(--blur)) saturate(112%);-webkit-backdrop-filter:blur(var(--blur)) saturate(112%);
-  box-shadow:var(--shadow),var(--hairline)}
+  background:rgba(255,255,255,.92);
+  border:1px solid rgba(255,255,255,.7);border-radius:var(--r-lg);padding:18px;
+  backdrop-filter:blur(var(--blur)) saturate(108%);-webkit-backdrop-filter:blur(var(--blur)) saturate(108%);
+  box-shadow:0 14px 34px -18px rgba(28,30,24,.16),inset 0 1px 0 rgba(255,255,255,.8)}
 .card-tight{padding:15px}
 .card-xl{border-radius:var(--r-xl);padding:22px}
 .pad-lg{padding:22px}
 
-/* hero card = same clear glass, a touch brighter + stronger edge highlight */
-.card-lime{color:#fff;
-  background:linear-gradient(150deg,rgba(255,255,255,.18) 0%,rgba(255,255,255,.075) 46%,rgba(255,255,255,.05) 100%);
-  border:1px solid var(--stroke-hi);box-shadow:var(--shadow),inset 0 1px 0 rgba(255,255,255,.5)}
-.card-lime .eyebrow{color:rgba(255,255,255,.66)}
-.card-lime .dim{color:rgba(255,255,255,.6)}
-.card-lime .num{color:#fff}
-.card-lime .meter{background:rgba(255,255,255,.16)}
-.card-lime .meter>i{background:#fff}
-/* force the hero content light (overrides the old dark-on-teal inline colors) */
-.card-lime .h1,.card-lime .h2,.card-lime .body,.card-lime .small,.card-lime .mega,.card-lime .big,.card-lime .med{color:#fff!important}
-.card-lime .unit{color:rgba(255,255,255,.6)!important}
+/* hero card = deep-green point gradient, bone text (the one accent-filled card per screen) */
+.card-lime{color:var(--lime-ink);
+  background:var(--grad-green);
+  border:1px solid rgba(255,255,255,.1);box-shadow:0 18px 38px -20px rgba(26,40,28,.55)}
+.card-lime .eyebrow{color:rgba(244,242,230,.62)}
+.card-lime .dim{color:rgba(244,242,230,.66)}
+.card-lime .num{color:var(--lime-ink)}
+.card-lime .meter{background:rgba(244,242,230,.2)}
+.card-lime .meter>i{background:var(--lime-ink)}
+.card-lime .pill-dark{background:rgba(244,242,230,.14);border:1px solid rgba(244,242,230,.22);color:var(--lime-ink)}
+.card-lime .h1,.card-lime .h2,.card-lime .body,.card-lime .small,.card-lime .mega,.card-lime .big,.card-lime .med{color:var(--lime-ink)!important}
+.card-lime .unit{color:rgba(244,242,230,.62)!important}
 
 /* ---- Bento grid ----------------------------------------------------------*/
 .bento{display:grid;grid-template-columns:1fr 1fr;gap:12px;align-items:stretch}
@@ -150,6 +153,15 @@ img,svg{max-width:100%}
 .mosaic .tall{grid-row:span 2}
 .stack>*+*{margin-top:12px}
 .v-between{display:flex;flex-direction:column;justify-content:space-between;height:100%}
+/* the two summary cards read as a matched pair: eyebrow, figure, one-line caption */
+.hero-duo{min-height:168px;padding:16px 18px 16px}
+.hd-fig{margin-top:auto}
+.hd-cap{font-size:12.5px;font-weight:600;margin-top:10px;line-height:1.35}
+.hd-ring{position:relative;width:80px;height:80px;margin-inline:auto}
+.hd-ringnum{position:absolute;inset:0;display:grid;place-items:center;align-content:center;text-align:center;line-height:1}
+/* the number is centred on the ring itself; "days" is a small caption under it */
+.hd-ringnum .hd-n{position:absolute;left:0;right:0;top:50%;transform:translateY(-50%);font-size:38px;line-height:1}
+.hd-ringnum .hd-d{position:absolute;left:0;right:0;top:calc(50% + 17px);font-size:8px;letter-spacing:.06em;line-height:1;margin:0}
 
 /* ---- Header --------------------------------------------------------------*/
 .head{display:flex;align-items:center;justify-content:space-between;padding:10px 2px 6px;gap:12px}
@@ -159,7 +171,7 @@ img,svg{max-width:100%}
   backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px);transition:.16s}
 .icon-btn:active{transform:scale(.92)}
 .icon-btn svg{width:20px;height:20px;stroke:var(--ink);fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-.icon-btn.lime-ic svg{stroke:var(--lime)}
+.icon-btn.lime-ic svg{stroke:var(--lime-deep)}
 .icon-cluster{display:flex;gap:9px}
 .avatar-badge{width:42px;height:42px;border-radius:50%;background:linear-gradient(150deg,#20241a,#14160f);
   border:1px solid var(--stroke-hi);display:grid;place-items:center;font-weight:780;font-size:15px;color:var(--lime);flex:0 0 auto}
@@ -167,9 +179,9 @@ img,svg{max-width:100%}
 /* ---- Pills / chips -------------------------------------------------------*/
 .pill{display:inline-flex;align-items:center;gap:6px;height:30px;padding:0 13px;border-radius:var(--r-pill);
   font-size:12.5px;font-weight:680;background:var(--glass-2);border:1px solid var(--stroke);color:var(--ink);white-space:nowrap}
-.pill-lime{background:rgba(135,216,206,.15);border-color:rgba(135,216,206,.32);color:var(--lime)}
-.pill-warn{background:var(--warn-soft);border-color:rgba(240,181,74,.34);color:var(--warn)}
-.pill-solid{background:var(--lime);color:var(--lime-ink);border:none}
+.pill-lime{background:rgba(63,95,88,.12);border-color:transparent;color:var(--lime-deep)}
+.pill-warn{background:var(--warn-soft);border-color:rgba(220,202,86,.34);color:var(--warn)}
+.pill-solid{background:var(--grad-green);color:var(--lime-ink);border:none}
 .pill-dark{background:rgba(255,255,255,.15);border:1px solid rgba(255,255,255,.24);color:#fff}
 .dot{width:7px;height:7px;border-radius:50%;background:var(--lime);flex:0 0 auto}
 .dot-warn{background:var(--warn)}
@@ -180,112 +192,234 @@ img,svg{max-width:100%}
 .mt-16{margin-top:16px}.mt-20{margin-top:20px}.mt-24{margin-top:24px}
 .grow{flex:1;min-width:0}.center{text-align:center}
 
+/* ===== Home — stripped to one big number + a thin bar + two quiet tiles ===== */
+.hm-head{display:flex;align-items:flex-start;justify-content:space-between;gap:12px;padding:14px 2px 0}
+.hm-kicker{font-size:15px;font-weight:800;letter-spacing:-.02em;color:var(--ink)}
+.hm-sub{font-size:13px;font-weight:500;color:var(--muted-2);margin-top:2px}
+.hm-ava{width:36px;height:36px;flex:0 0 auto;border-radius:50%;background:var(--ink);color:#fff;
+  font-size:13px;font-weight:700;display:grid;place-items:center}
+
+.hm-hero{display:flex;align-items:flex-start;gap:10px;margin:40px 0 0;padding:0 2px}
+.hm-big{font-size:96px;font-weight:820;letter-spacing:-.06em;line-height:.82;color:var(--ink)}
+.hm-big i{font-style:normal;font-size:.42em;font-weight:700;letter-spacing:-.02em;margin-left:.22em}
+.hm-caret{margin-top:16px;color:var(--muted-2)}
+.hm-caret svg{width:22px;height:22px}
+.hm-herolab{font-size:12.5px;font-weight:450;color:var(--muted-2);margin:8px 2px 0;letter-spacing:-.005em}
+/* "Day 0" has a descender (the y) that hangs below its tight line box — clear it */
+.hm-herolab.is-fresh{margin-top:24px}
+
+.hm-bar{margin-top:34px;padding:0 2px}
+.hm-bar-top{display:flex;justify-content:space-between;font-size:11px;font-weight:600;
+  letter-spacing:.14em;text-transform:uppercase;color:var(--muted)}
+.hm-track{height:8px;border-radius:99px;background:rgba(20,24,14,.08);overflow:hidden;margin-top:9px}
+.hm-track>i{display:block;height:100%;border-radius:inherit;background:var(--grad-green)}
+
+/* label first, then the icon, then the number — the reading order of the reference */
+.hm-tiles{display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:26px}
+.hm-tile{display:flex;flex-direction:column;align-items:flex-start;text-align:left;
+  padding:15px 16px 16px;border-radius:20px;background:rgba(20,24,14,.045)}
+.hm-tile:active{background:rgba(20,24,14,.08)}
+.hm-tl{font-size:12.5px;font-weight:520;letter-spacing:-.005em;color:var(--muted)}
+.hm-ti{display:block;line-height:0;margin-top:16px}
+.hm-ti svg{width:27px;height:27px;stroke-linecap:round;stroke-linejoin:round}
+.hm-tv{font-size:32px;font-weight:820;letter-spacing:-.03em;color:var(--ink);line-height:1;margin-top:12px}
+.hm-tv i{font-style:normal;font-size:.62em;font-weight:780;letter-spacing:-.01em}
+
+/* tonight's mission — a fanned deck: the middle card stands up, the rest tilt away */
+/* mission block sits ~20px higher than before so the cards clear the tab bar pill; the label has
+   the same 27px of air above (tiles) and below (card) */
+.hm-picktitle{display:flex;align-items:baseline;justify-content:space-between;margin-top:24px;padding:0 2px}
+/* the rail is driven by hand (see wireMissionSwipe) — native scrolling is off so a
+   flick can never coast past the middle and spring back */
+.mpick{display:flex;gap:0;overflow:hidden;touch-action:pan-y;
+  margin:4px -18px 0;padding:22px 18px 78px;scrollbar-width:none}
+.mpick::-webkit-scrollbar{display:none}
+/* end spacers so the first and last card can reach the middle too */
+.mpick::before,.mpick::after{content:'';flex:0 0 calc(19% + 30px)}
+.mp-card{flex:0 0 62%;aspect-ratio:1/1;margin:0 -30px;user-select:none;-webkit-user-select:none;text-align:left;
+  display:grid;grid-template-rows:auto 1fr auto;position:relative;
+  border-radius:30px;padding:18px 18px 16px;color:var(--mp-ink,#F4F2E6);
+  transform-origin:50% 100%;will-change:transform;
+  transition:opacity .3s, box-shadow .3s;
+  box-shadow:0 12px 26px -18px rgba(20,32,18,.42)}
+.mp-card[aria-pressed="true"]{box-shadow:0 18px 34px -20px rgba(20,32,18,.5)}
+/* five greens with real distance between them — two of them light, so the deck
+   reads as a spread rather than five shades of the same forest */
+.mp-card:nth-child(8n+1){--mp-ink:#1B2A08;
+  background:radial-gradient(82% 66% at 50% 44%,#83C426,#9AD331 28%,#B9E45B 58%,#DCF399 84%,#EFFAC9)}
+.mp-card:nth-child(8n+2){--mp-ink:#0B2318;   /* mint — saturation and brightness both eased down */
+  background:radial-gradient(82% 66% at 50% 44%,#4A8F73,#5E9E84 28%,#82BBA0 58%,#A9CFBC 84%,#C6DFD2)}
+.mp-card:nth-child(8n+3){--mp-ink:#F4F2E6;   /* teal — blue and green held even */
+  background:radial-gradient(82% 66% at 50% 44%,#03181A,#062C2E 32%,#0F5A57 62%,#2A8A85 86%,#4BB0A6)}
+.mp-card:nth-child(8n+4){--mp-ink:#F4F2E6;
+  background:radial-gradient(82% 66% at 50% 44%,#101F04,#1D3407 32%,#3C651A 62%,#6BA22C 86%,#8FC441)}
+.mp-card:nth-child(8n+5){--mp-ink:#F4F2E6;
+  background:radial-gradient(82% 66% at 50% 44%,#061708,#0D2A12 32%,#1D4B24 62%,#3B7C43 86%,#55A05B)}
+.mp-card:nth-child(8n+6){--mp-ink:#F4F2E6;
+  background:radial-gradient(82% 66% at 50% 44%,#07200F,#0E3418 32%,#1F5F32 62%,#41955A 86%,#63B77C)}
+.mp-card:nth-child(8n+7){--mp-ink:#1E2A0E;
+  background:radial-gradient(82% 66% at 50% 44%,#8FCB6E,#A3D682 28%,#C2E5A6 58%,#DEF1CB 84%,#EEF8E2)}
+.mp-card:nth-child(8n+8){--mp-ink:#F4F2E6;
+  background:radial-gradient(82% 66% at 50% 44%,#03130A,#062617 32%,#0E4A2C 62%,#26804E 86%,#48A56C)}
+.mp-mode{font-size:15.5px;font-weight:800;letter-spacing:-.025em;line-height:1.15}
+.mp-short{font-size:13px;font-weight:520;color:var(--mp-ink,#F4F2E6);opacity:.62;
+  margin-top:2px;letter-spacing:-.01em}
+.mp-num{align-self:center;justify-self:center;font-size:74px;font-weight:830;
+  letter-spacing:-.045em;line-height:.9}
+.mp-num i{font-style:normal;font-size:.32em;font-weight:700;letter-spacing:-.01em;margin-left:4px}
+.mp-foot{font-size:11px;font-weight:620;letter-spacing:.12em;text-transform:uppercase;
+  color:var(--mp-ink,#F4F2E6);opacity:.7}
+
 /* ---- Condition check -----------------------------------------------------*/
 .mood-row{display:grid;grid-template-columns:repeat(3,1fr);gap:10px}
 .mood{aspect-ratio:1/.9;border-radius:var(--r-sm);background:var(--glass-2);border:1px solid var(--stroke);
   display:flex;flex-direction:column;align-items:center;justify-content:center;gap:8px;color:var(--muted);transition:.18s}
 .mood svg{width:32px;height:32px;stroke:currentColor;fill:none;stroke-width:1.7;stroke-linecap:round}
-.mood .lab{font-size:11.5px;font-weight:680}
-.mood[aria-pressed="true"]{background:#fff;border-color:#fff;color:#0c1210}
+.mood .lab{font-size:11.5px;font-weight:590}
+.mood[aria-pressed="true"]{background:#fff;border-color:#fff;color:#0c1210;box-shadow:0 6px 16px -6px rgba(20,24,14,.25)}
 .mood[aria-pressed="true"] .lab{color:#0c1210}
 .chips{display:flex;flex-wrap:wrap;gap:8px}
 .chip{height:38px;padding:0 15px;border-radius:var(--r-pill);background:var(--glass-2);border:1px solid var(--stroke);
   font-size:13px;font-weight:640;color:var(--muted);transition:.15s}
-.chip[aria-pressed="true"]{background:#fff;color:#0c1210;border-color:#fff}
-/* Today's-mission hero gets the soft teal-mint aurora gradient (dark text on top) */
-.mission-hero{background:
-  radial-gradient(92% 78% at 8% 2%,rgba(178,244,232,.85),transparent 60%),
-  radial-gradient(88% 88% at 98% 10%,rgba(132,214,246,.6),transparent 60%),
-  radial-gradient(98% 100% at 88% 110%,rgba(126,240,190,.66),transparent 60%),
-  radial-gradient(96% 98% at 12% 104%,rgba(92,208,194,.72),transparent 62%),
-  linear-gradient(150deg,#55bdae,#3d9a90)!important;
-  border-color:rgba(255,255,255,.44)}
-.mission-hero .eyebrow{color:rgba(6,32,27,.74)!important}
-.mission-hero .h1,.mission-hero .h2,.mission-hero .body,.mission-hero .small{color:#08211d!important;text-shadow:none}
-.mission-hero .pill-dark{background:rgba(6,22,19,.36);border:1px solid rgba(255,255,255,.22);color:#fff}
-.mission-hero .pill-dark svg{stroke:#fff}
-/* condition-check selection uses the teal point colour (not white) */
-.cond-card .mood[aria-pressed="true"]{background:var(--lime);border-color:var(--lime);color:var(--lime-ink);box-shadow:0 6px 18px -8px rgba(135,216,206,.55)}
+.chip[aria-pressed="true"]{background:#fff;color:#0c1210;border-color:#fff;box-shadow:0 4px 12px -4px rgba(20,24,14,.22)}
+/* onboarding goal chips: selected uses the brand point colour */
+#onboarding .chip[aria-pressed="true"]{background:var(--lime);color:var(--lime-ink);
+  border-color:var(--lime);box-shadow:0 6px 16px -6px rgba(63,95,88,.55)}
+/* Today's-mission hero = the deep-green point gradient, bone text */
+.mission-hero{background:var(--grad-green)!important;
+  border-color:rgba(255,255,255,.1)}
+.mission-hero .eyebrow{color:rgba(244,242,230,.6)!important}
+.mission-hero .h1,.mission-hero .h2,.mission-hero .body,.mission-hero .small{color:var(--lime-ink)!important;text-shadow:none}
+.mission-hero .dim{color:rgba(244,242,230,.7)!important}
+.mission-hero .pill-dark{background:rgba(244,242,230,.14);border:1px solid rgba(244,242,230,.24);color:var(--lime-ink)}
+.mission-hero .pill-dark svg{stroke:var(--lime-ink)}
+/* condition-check selection — deep-green point gradient, bone text */
+.cond-card .mood[aria-pressed="true"]{background:var(--grad-green);border-color:rgba(255,255,255,.12);color:var(--lime-ink);box-shadow:0 10px 20px -10px rgba(52,78,76,.55)}
 .cond-card .mood[aria-pressed="true"] .lab{color:var(--lime-ink)}
-.cond-card .chip[aria-pressed="true"]{background:var(--lime);color:var(--lime-ink);border-color:var(--lime);box-shadow:0 6px 16px -8px rgba(135,216,206,.5)}
-/* This week card — subtle teal gradient box (distinct from the neutral STREAK card) */
+.cond-card .mood[aria-pressed="true"] svg{stroke:var(--lime-ink)}
+.cond-card .chip[aria-pressed="true"]{background:var(--grad-green);color:var(--lime-ink);border-color:rgba(255,255,255,.12)}
+/* This week card — a sage gradient box, distinct from the neutral STREAK card */
 .week-card{background:
-  radial-gradient(120% 100% at 82% 0%,rgba(135,216,206,.24),transparent 62%),
-  radial-gradient(120% 120% at 8% 100%,rgba(84,190,178,.16),transparent 60%),
-  linear-gradient(152deg,rgba(255,255,255,.12) 0%,rgba(255,255,255,.045) 100%);
-  border-color:rgba(135,216,206,.36)}
+  radial-gradient(120% 100% at 84% 0%,rgba(63,95,88,.22),transparent 62%),
+  radial-gradient(120% 120% at 8% 100%,rgba(63,95,88,.12),transparent 60%),
+  linear-gradient(152deg,#EEF1E4 0%,#E1E7D2 100%);
+  border-color:rgba(63,95,88,.24)}
+
+/* ---- Growth headline: half-circle speed gauge + rising record bars ------ */
+.gauge-wrap{position:relative;width:min(272px,86%);margin:10px auto 0}
+.gauge{display:block;width:100%;height:auto;overflow:visible}
+.gauge path{fill:none;stroke-linecap:round;stroke-width:10}
+.g-track{stroke:rgba(20,24,14,.10)}
+.g-fill{stroke:url(#gaugeGrad);transition:stroke-dashoffset .6s cubic-bezier(.2,.8,.2,1)}
+.gauge-num{position:absolute;left:0;right:0;bottom:0;text-align:center;line-height:1}
+.gauge-num b{font-size:54px;font-weight:840;letter-spacing:-.045em;font-variant-numeric:tabular-nums}
+.gauge-num span{font-size:13.5px;font-weight:580;color:var(--muted);margin-left:5px}
+.gauge-foot{display:flex;justify-content:space-between;margin:6px auto 0;width:min(272px,86%);
+  font-size:10.5px;font-weight:580;letter-spacing:.1em;color:var(--muted-2);font-variant-numeric:tabular-nums}
+
+/* speed trend: range pills, big peak, line on a soft wash */
+.rc-range{display:flex;gap:4px;justify-content:space-between}
+.rc-range button{flex:1;padding:7px 0;border-radius:99px;font-size:12px;font-weight:720;
+  color:var(--muted-2);transition:.16s}
+.rc-range button[aria-selected="true"]{background:var(--ink);color:#fff}
+.rc-big{font-size:44px;font-weight:840;letter-spacing:-.04em;line-height:1.05;
+  font-variant-numeric:tabular-nums;margin-top:2px}
+.rc-big span{font-size:17px;font-weight:580;color:var(--muted);margin-left:5px}
+.rc-svg{display:block;width:100%;height:auto;overflow:visible;margin-top:10px}
+.rc-grid{stroke:rgba(20,24,14,.07);stroke-width:1}
+.rc-area{fill:url(#recFill);stroke:none}
+.rc-line{fill:none;stroke:var(--ink);stroke-width:1.9;stroke-linejoin:round;stroke-linecap:round}
+.rc-tick{stroke:var(--lime);stroke-width:2.6;stroke-linecap:round}
+.rc-lab{font-size:10.5px;font-weight:780;fill:var(--lime-deep);font-family:var(--sans)}
+.rec-axis{display:flex;justify-content:space-between;margin-top:9px;
+  font-size:10.5px;font-weight:540;color:var(--muted-2)}
 
 /* ---- Meters --------------------------------------------------------------*/
-.meter{height:8px;border-radius:var(--r-pill);background:rgba(255,255,255,.10);overflow:hidden}
+.meter{height:8px;border-radius:var(--r-pill);background:rgba(20,24,14,.08);overflow:hidden}
 .meter>i{display:block;height:100%;border-radius:inherit;background:var(--lime)}
-.card-lime .meter{background:rgba(12,13,9,.2)}.card-lime .meter>i{background:var(--lime-ink)}
+.card-lime .meter{background:rgba(244,242,230,.22)}.card-lime .meter>i{background:var(--lime-ink)}
+.mission-hero .meter{background:rgba(244,242,230,.22)}.mission-hero .meter>i{background:var(--lime-ink)}
 .ring{transform:rotate(-90deg)}
 
-/* ---- Tab bar -------------------------------------------------------------*/
-.tabbar{position:absolute;left:0;right:0;bottom:0;height:var(--tab-h);z-index:30;
-  display:grid;grid-template-columns:1fr 1fr 92px 1fr 1fr;align-items:center;
-  padding:0 10px calc(env(safe-area-inset-bottom,0));
-  background:linear-gradient(180deg,rgba(11,12,8,.35),rgba(11,12,8,.94) 55%);
-  backdrop-filter:blur(14px);-webkit-backdrop-filter:blur(14px);border-top:1px solid var(--stroke)}
-.tab{display:flex;flex-direction:column;align-items:center;gap:5px;color:var(--muted);
-  font-size:10.5px;font-weight:680;padding-top:4px}
-.tab svg{width:24px;height:24px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
-.tab[aria-current="page"]{color:#fff}
-.tab[aria-current="page"] svg{filter:drop-shadow(0 0 8px rgba(255,255,255,.45))}
-.tab-start{position:relative;display:grid;place-items:center}
-.start-btn{width:72px;height:72px;border-radius:50%;transform:translateY(-18px);
-  background:radial-gradient(120% 120% at 32% 22%,var(--lime-hi),var(--lime-deep));color:var(--lime-ink);
-  display:grid;place-items:center;
-  box-shadow:0 16px 32px -8px rgba(135,216,206,.55),0 0 0 7px rgba(135,216,206,.09);transition:transform .18s cubic-bezier(.2,.8,.2,1)}
-.start-btn:active{transform:translateY(-18px) scale(.93)}
-.start-btn svg{width:30px;height:30px;stroke:var(--lime-ink);fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
-.start-lab{position:absolute;bottom:1px;font-size:10px;font-weight:780;color:var(--lime);letter-spacing:.04em}
+/* ---- Tab bar scrim — fades scrolled content out before it hits the pill --*/
+.tabbar-scrim{position:absolute;left:0;right:0;bottom:0;height:140px;z-index:20;
+  pointer-events:none;
+  background:linear-gradient(to bottom,rgba(244,243,241,0) 0%,rgba(244,243,241,.82) 52%,rgba(244,243,241,.97) 100%)}
+.phone.on-home .tabbar-scrim{display:none}
+.phone.on-white .tabbar-scrim{
+  background:linear-gradient(to bottom,rgba(255,255,255,0) 0%,rgba(255,255,255,.82) 52%,rgba(255,255,255,.97) 100%)}
 
-/* ---- Swing avatar (signature) --------------------------------------------*/
+/* ---- Tab bar — white floating pill, circular icon buttons --------------*/
+.tabbar{position:absolute;left:16px;right:16px;z-index:30;
+  bottom:calc(14px + env(safe-area-inset-bottom,0));height:60px;border-radius:var(--r-pill);
+  display:grid;grid-template-columns:repeat(5,1fr);align-items:center;align-content:center;
+  grid-auto-rows:42px;padding:0 12px;
+  background:rgba(255,255,255,.9);
+  backdrop-filter:blur(16px) saturate(120%);-webkit-backdrop-filter:blur(16px) saturate(120%);
+  box-shadow:0 18px 40px -14px rgba(30,32,26,.22),inset 0 1px 0 rgba(255,255,255,.9);
+  border:1px solid rgba(20,24,14,.07)}
+.tab{display:grid;place-items:center;width:42px;height:42px;margin:0 auto;border-radius:50%;
+  color:var(--muted);transition:.16s;line-height:0}
+.tab>span{display:none}
+.tab svg{display:block;width:21px;height:21px;stroke:currentColor;fill:none;stroke-width:1.9;stroke-linecap:round;stroke-linejoin:round}
+.tab[aria-current="page"]{background:#E7E6E1;color:var(--ink)}
+/* start: the same flat circular icon as the tabs — just a touch darker so it
+   still reads as the primary action */
+.tab-start{display:grid;place-items:center}
+.start-btn{width:42px;height:42px;border-radius:50%;display:grid;place-items:center;
+  background:none;box-shadow:none;color:var(--ink);transition:.16s}
+.start-btn:active{transform:scale(.92)}
+.start-btn svg{display:block;width:22px;height:22px;fill:currentColor;stroke:none}
+.start-lab{display:none}
+
+/* ---- Swing avatar (signature) — white capture stage, grid kept for the tech feel --*/
+/* no tint, no frame — the halftone figure sits straight on the page */
 .avatar-stage{position:relative;width:100%;border-radius:var(--r-md);overflow:hidden;
-  background:
-    radial-gradient(90% 72% at 50% 0%,rgba(135,216,206,.16),transparent 60%),
-    linear-gradient(180deg,#0C0D09 0%,#090A06 100%);
-  border:1px solid var(--stroke)}
-.avatar-stage svg{display:block;width:100%;height:auto}
-.avatar-grid{position:absolute;inset:0;background-image:
-  linear-gradient(rgba(150,230,220,.06) 1px,transparent 1px),
-  linear-gradient(90deg,rgba(150,230,220,.06) 1px,transparent 1px);
-  background-size:26px 26px;mask-image:linear-gradient(180deg,transparent,#000 30%,#000 70%,transparent)}
-.play-pill{position:absolute;top:13px;right:13px}
-.phase-tag{position:absolute;left:13px;top:13px}
+  background:none;border:none}
+.avatar-stage svg,.avatar-stage img{display:block;width:100%;height:auto}
+.avatar-grid{display:none}
+/* replay control = a bare point-colour play triangle, no circle */
+.play-pill{position:absolute;top:10px;right:12px;z-index:3;
+  display:inline-flex;align-items:center;justify-content:center;
+  width:34px;height:34px;padding:0;border:none;background:none;cursor:pointer;
+  color:var(--lime);filter:drop-shadow(0 1px 2px rgba(20,28,10,.35))}
+.play-pill svg{width:26px;height:26px;flex:0 0 auto}
+.play-pill:active{transform:scale(.92)}
+.play-pill.playing{opacity:.45}
 
-.skeleton .bone{stroke:var(--lime);stroke-width:3.4;stroke-linecap:round;stroke-linejoin:round;fill:none}
-.skeleton .joint{fill:var(--lime)}
-.skeleton .club{stroke:rgba(245,246,240,.85);stroke-width:2.4;stroke-linecap:round;fill:none}
-.skeleton.ghost .bone{stroke:rgba(142,146,126,.5);stroke-width:3}
-.skeleton.ghost .joint{fill:rgba(142,146,126,.55)}
-.skeleton.ghost .club{stroke:rgba(142,146,126,.4)}
-.skeleton.warn .bone{stroke:var(--alert)}
-.skeleton.warn .joint{fill:var(--alert)}
-.skeleton.warn .club{stroke:rgba(255,107,91,.6)}
+/* posture stills; ghost = the "before" tone */
+.ba-pose{display:block;width:100%;aspect-ratio:3/4;object-fit:contain;padding:8px}
+.ba-pose.ghost{filter:grayscale(.85);opacity:.42}
+.skeleton image{opacity:1}
+.skeleton.ghost image{filter:grayscale(.75);opacity:.6}
 
 /* ---- Phase frames --------------------------------------------------------*/
-.frames{display:grid;grid-template-columns:repeat(4,1fr);gap:9px}
-.frame{border-radius:14px;background:var(--glass-2);border:1px solid var(--stroke);
-  padding:8px 5px 7px;text-align:center;position:relative;overflow:hidden}
-.frame .mini{width:100%;border-radius:9px;background:#0A0B07;overflow:hidden;margin-bottom:6px}
+.frames{display:grid;grid-template-columns:repeat(3,1fr);gap:9px}
+.frame{border-radius:14px;background:none;border:none;
+  padding:8px 6px 7px;text-align:center;position:relative;overflow:hidden}
+.frame .mini{width:100%;border-radius:9px;background:none;overflow:hidden;margin-bottom:6px}
 .frame .mini svg{display:block;width:100%;height:auto}
-.frame .fl{font-size:10.5px;font-weight:650;color:var(--muted)}
-.frame.warn{border-color:rgba(255,107,91,.5);background:var(--alert-soft)}
+/* per-phase swing still: whole figure centred in the box, same scale across phases */
+.frame .mini.pose-mini{aspect-ratio:1/1;background:none;
+  display:flex;align-items:center;justify-content:center}
+.frame .mini.pose-mini img.pose{display:block;width:100%;height:100%;
+  object-fit:contain;object-position:center}
+.frame.warn .mini.pose-mini{background:none}
+.frame .fl{font-size:10.5px;font-weight:550;letter-spacing:-.01em;color:var(--muted);line-height:1.15}
+.frame.warn{background:none}
 .frame.warn .fl{color:var(--alert)}
-.frame.cur{outline:1.5px solid #fff;outline-offset:-1px}
+.frame.cur{outline:1.5px solid var(--lime-deep);outline-offset:-1px}
 .frame .flag{position:absolute;top:5px;right:5px;width:15px;height:15px;border-radius:50%;
   background:var(--alert);color:#fff;display:grid;place-items:center;font-size:10px;font-weight:850}
 
 /* ---- Metric cards --------------------------------------------------------*/
 .metric{padding:15px 15px 13px}
-.metric .ml{font-size:11.5px;font-weight:640;color:var(--muted)}
+.metric .ml{font-size:11.5px;font-weight:540;color:var(--muted)}
 .metric .mv{font-size:27px;font-weight:840;letter-spacing:-.035em;margin-top:9px;line-height:1;font-variant-numeric:tabular-nums}
-.metric .mv small{font-size:12.5px;font-weight:600;color:var(--muted);letter-spacing:0}
+.metric .mv small{font-size:12.5px;font-weight:520;color:var(--muted);letter-spacing:0}
 .delta{display:inline-flex;align-items:center;gap:3px;font-size:11.5px;font-weight:750;margin-top:7px}
 .delta svg{width:11px;height:11px}
-.delta.up{color:var(--lime)}.delta.down{color:var(--alert)}.delta.flat{color:var(--muted)}
+.delta.up{color:var(--lime-deep)}.delta.down{color:var(--alert)}.delta.flat{color:var(--muted)}
 .spark{margin-top:10px;width:100%;height:28px;display:block}
 
 /* ---- Charts --------------------------------------------------------------*/
@@ -294,23 +428,46 @@ img,svg{max-width:100%}
 .legend i{display:inline-block;width:15px;height:3px;border-radius:2px;vertical-align:middle;margin-right:7px}
 
 /* ---- Calendar ------------------------------------------------------------*/
+/* ---- Year dot-grid calendar ---------------------------------------------*/
+.dotcal-card{padding-top:20px}
+.yr-head{display:flex;align-items:center;justify-content:space-between;gap:14px;margin-top:4px}
+.yr-title{flex:1;text-align:center;font-size:34px;font-weight:840;letter-spacing:-.04em;
+  font-variant-numeric:tabular-nums;line-height:1}
+.yr-arrow{width:44px;height:44px;flex:0 0 auto;border-radius:50%;background:var(--ink);
+  display:grid;place-items:center;transition:.16s}
+.yr-arrow svg{width:17px;height:17px;stroke:#fff;fill:none;stroke-width:2.4;stroke-linecap:round;stroke-linejoin:round}
+.yr-arrow:active{transform:scale(.92)}
+.yr-arrow.ghost{background:rgba(20,24,14,.08)}
+.yr-arrow.ghost svg{stroke:var(--muted-2)}
+
+.dotcal{margin-top:22px}
+.dc-row{display:grid;grid-template-columns:repeat(12,1fr);margin-bottom:10px}
+.dc-row i{justify-self:center;width:9px;height:9px;border-radius:50%;background:rgba(20,24,14,.13)}
+.dc-row i.on{background:var(--ink)}
+.dc-row i.fut{background:rgba(20,24,14,.05)}
+.dc-axis{display:grid;grid-template-columns:repeat(12,1fr);margin-top:14px;
+  font-size:11.5px;font-weight:600;color:var(--muted);text-align:center}
+.dc-axis span.fut{color:var(--muted-2);opacity:.45}
+.dc-cap{margin-top:18px;padding:0 6px;line-height:1.45}
+
 .cal-grid{display:grid;grid-template-columns:repeat(7,1fr);gap:6px;margin-top:14px}
-.cal-h{font-size:10px;font-weight:700;color:var(--muted-2);text-align:center;padding-bottom:2px;letter-spacing:.04em}
+.cal-h{font-size:10px;font-weight:590;color:var(--muted-2);text-align:center;padding-bottom:2px;letter-spacing:.04em}
 .cal-d{aspect-ratio:1;border-radius:12px;display:grid;place-items:center;font-size:12.5px;font-weight:620;
   color:var(--muted);position:relative}
 .cal-d.pad{visibility:hidden}
-.cal-d.done{background:rgba(135,216,206,.15);color:var(--ink);cursor:pointer;transition:.15s}
+.cal-d.done{background:rgba(63,95,88,.18);color:var(--ink);cursor:pointer;transition:.15s}
 .cal-d.done::after{content:"";position:absolute;bottom:5px;width:5px;height:5px;border-radius:50%;background:var(--lime)}
-.cal-d.done:hover,.cal-d.done:focus-visible{background:rgba(135,216,206,.3)}
+.cal-d.done:hover,.cal-d.done:focus-visible{background:rgba(63,95,88,.32)}
 .cal-d.today{background:var(--lime);color:var(--lime-ink);font-weight:750}
 .cal-d.today::after{display:none}
 
 /* ---- Segmented -----------------------------------------------------------*/
 .seg{display:grid;grid-auto-flow:column;grid-auto-columns:1fr;gap:4px;padding:4px;
-  background:var(--glass);border:1px solid var(--stroke);border-radius:var(--r-pill);
-  backdrop-filter:blur(9px);-webkit-backdrop-filter:blur(9px)}
-.seg button{height:36px;border-radius:var(--r-pill);font-size:12.5px;font-weight:680;color:var(--muted);transition:.16s}
-.seg button[aria-selected="true"]{background:#fff;color:#0c1210}
+  background:rgba(20,24,14,.05);border:none;border-radius:var(--r-pill)}
+.seg button{height:36px;border-radius:var(--r-pill);font-size:12.5px;font-weight:590;color:var(--muted);transition:.16s}
+.seg.seg-6{gap:2px;padding:3px}
+.seg.seg-6 button{height:32px;font-size:10.5px;letter-spacing:-.02em}
+.seg button[aria-selected="true"]{background:#fff;color:#0c1210;box-shadow:0 2px 8px -2px rgba(20,24,14,.2)}
 
 /* ---- List rows -----------------------------------------------------------*/
 .list{background:var(--glass);border:1px solid var(--stroke);border-radius:var(--r-lg);overflow:hidden;
@@ -318,21 +475,22 @@ img,svg{max-width:100%}
 .lrow{display:flex;align-items:center;gap:14px;padding:15px 16px;border-top:1px solid var(--stroke)}
 .lrow:first-child{border-top:none}
 .lrow .ico{width:34px;height:34px;border-radius:11px;background:var(--glass-2);display:grid;place-items:center;flex:0 0 auto}
-.lrow .ico svg{width:19px;height:19px;stroke:var(--lime);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
+.lrow .ico svg{width:19px;height:19px;stroke:var(--lime-deep);fill:none;stroke-width:1.8;stroke-linecap:round;stroke-linejoin:round}
 .lrow .lm{flex:1;min-width:0}
 .lrow .lt{font-size:14.5px;font-weight:620}
 .lrow .ls{font-size:12px;color:var(--muted);margin-top:2px}
 .chev{color:var(--muted-2);flex:0 0 auto}
 .chev svg{width:18px;height:18px;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
-.sw{width:46px;height:28px;border-radius:var(--r-pill);background:rgba(255,255,255,.13);position:relative;transition:.2s;flex:0 0 auto}
-.sw::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;transition:.2s}
+.sw{width:46px;height:28px;border-radius:var(--r-pill);background:rgba(20,24,14,.14);position:relative;transition:.2s;flex:0 0 auto}
+.sw::after{content:"";position:absolute;top:3px;left:3px;width:22px;height:22px;border-radius:50%;background:#fff;
+  box-shadow:0 1px 3px rgba(20,24,14,.28);transition:.2s}
 .sw[aria-checked="true"]{background:var(--lime)}
 .sw[aria-checked="true"]::after{left:21px}
 
 /* ---- Buttons / inputs ----------------------------------------------------*/
 .btn{display:flex;align-items:center;justify-content:center;gap:9px;height:56px;width:100%;
   border-radius:var(--r-pill);font-size:16px;font-weight:770;transition:transform .15s,filter .15s}
-.btn-primary{background:var(--lime);color:var(--lime-ink);box-shadow:var(--shadow-lime)}
+.btn-primary{background:var(--grad-green);color:var(--lime-ink);box-shadow:var(--shadow-lime)}
 .btn-primary:active{transform:scale(.98)}
 .btn:disabled{opacity:.38;box-shadow:none;cursor:not-allowed}
 .btn:disabled:active{transform:none}
@@ -340,54 +498,179 @@ img,svg{max-width:100%}
 .btn svg{width:20px;height:20px;stroke:currentColor;fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
 .input{width:100%;background:var(--glass-2);border:1px solid var(--stroke);border-radius:var(--r-sm);
   padding:14px 16px;font-size:14.5px;color:var(--ink);resize:none}
-.input::placeholder{color:var(--muted-2)}.input:focus{outline:none;border-color:var(--lime)}
+.input::placeholder{color:var(--muted-2)}.input:focus{outline:none;border-color:var(--lime-deep)}
 
 .sec-title{display:flex;align-items:baseline;justify-content:space-between;margin:24px 2px 12px}
-.sec-title .link{font-size:12.5px;font-weight:680;color:var(--lime)}
+.sec-title .link{font-size:12.5px;font-weight:590;color:var(--lime-deep)}
 
 /* ---- Full-screen overlays (onboarding + zero-screen session) -------------*/
-.overlay{position:fixed;inset:0;z-index:100;display:none;background:#060704}
-.overlay.show{display:grid;place-items:center}
+.overlay{position:fixed;inset:0;z-index:100;display:none;background:var(--mesh-bg)}
+.overlay.show{display:grid;place-items:center;place-content:center}
 .ob-inner{position:relative;width:100%;max-width:432px;height:100dvh;max-height:936px;margin:0 auto;
-  display:flex;flex-direction:column;padding:0 26px;overflow:hidden;
-  background:radial-gradient(120% 80% at 50% 0%,rgba(135,216,206,.10),transparent 55%),linear-gradient(180deg,#0C0D09,#080905)}
-@media(min-width:480px){.ob-inner{height:min(93vh,912px);border-radius:54px;box-shadow:0 70px 130px -40px rgba(0,0,0,.85)}}
-.ob-top{flex:0 0 auto;padding-top:62px;display:flex;align-items:center;justify-content:space-between}
+  display:flex;flex-direction:column;overflow:hidden;background:#fff}
+.ob-top{flex:0 0 auto;padding:8px 26px 0;display:flex;align-items:center;justify-content:space-between}
 .ob-dots{display:flex;gap:7px}
-.ob-dots i{width:7px;height:7px;border-radius:50%;background:rgba(255,255,255,.16);transition:.25s}
+.ob-dots i{width:7px;height:7px;border-radius:99px;background:rgba(20,24,14,.16);transition:.25s}
 .ob-dots i.on{width:22px;background:var(--lime)}
-.ob-skip{font-size:13px;font-weight:640;color:var(--muted)}
-.ob-body{flex:1;display:flex;flex-direction:column;justify-content:center;animation:rise .5s cubic-bezier(.2,.7,.2,1) both}
-.ob-hero{margin:0 auto 30px}
+.ob-skip{font-size:13px;font-weight:550;color:var(--muted)}
+.ob-body{flex:1;min-height:0;display:flex;flex-direction:column;justify-content:center;padding:0 26px;
+  animation:rise .5s cubic-bezier(.2,.7,.2,1) both}
+.ob-hero{margin:0 auto min(24px,2.4vh);flex:0 0 auto;width:100%}
 .ob-title{font-size:29px;font-weight:830;letter-spacing:-.035em;line-height:1.12}
 .ob-sub{font-size:15px;line-height:1.55;color:var(--muted);margin-top:14px}
-.ob-foot{flex:0 0 auto;padding-bottom:44px}
+.ob-foot{flex:0 0 auto;padding:0 26px calc(22px + env(safe-area-inset-bottom,0))}
+/* Camera-setup + Goal onboarding steps share this footer — black CTA instead
+   of the green brand button, so it reads as a neutral "continue" action */
+.ob-foot .btn-primary{background:var(--ink);color:#fff;box-shadow:0 16px 34px -16px rgba(20,24,14,.45)}
 .goal-opt{display:flex;align-items:center;gap:14px;width:100%;padding:16px;border-radius:var(--r-md);
   background:var(--glass-2);border:1px solid var(--stroke);text-align:left;transition:.15s}
-.goal-opt[aria-pressed="true"]{border-color:var(--lime);background:rgba(135,216,206,.1)}
-.goal-opt .gt{font-size:15px;font-weight:700}.goal-opt .gs{font-size:12.5px;color:var(--muted);margin-top:2px}
+.goal-opt[aria-pressed="true"]{border-color:var(--lime-deep);background:rgba(63,95,88,.12)}
+.goal-opt .gt{font-size:15px;font-weight:650}.goal-opt .gs{font-size:12.5px;color:var(--muted);margin-top:2px}
 .goal-check{width:24px;height:24px;border-radius:50%;border:1.5px solid var(--stroke-hi);flex:0 0 auto;display:grid;place-items:center}
 .goal-opt[aria-pressed="true"] .goal-check{background:var(--lime);border-color:var(--lime)}
 .goal-opt[aria-pressed="true"] .goal-check svg{opacity:1}
 .goal-check svg{width:14px;height:14px;stroke:var(--lime-ink);fill:none;stroke-width:3;opacity:0;stroke-linecap:round;stroke-linejoin:round}
 
-/* zero-screen session overlay */
-.zs{position:relative;width:100%;max-width:432px;height:100dvh;max-height:936px;margin:0 auto;
-  display:flex;flex-direction:column;align-items:center;justify-content:center;text-align:center;padding:0 34px;
-  background:radial-gradient(90% 60% at 50% 40%,rgba(135,216,206,.12),transparent 60%),linear-gradient(180deg,#0C0D09,#070804)}
-@media(min-width:480px){.zs{height:min(93vh,912px);border-radius:54px}}
-.zs-orb{width:150px;height:150px;border-radius:50%;display:grid;place-items:center;margin-bottom:34px;position:relative}
-.zs-orb .core{width:96px;height:96px;border-radius:50%;background:radial-gradient(circle at 35% 30%,var(--lime-hi),var(--lime-deep));
-  box-shadow:0 0 60px rgba(135,216,206,.5);display:grid;place-items:center}
-.zs-orb .core svg{width:40px;height:40px;stroke:var(--lime-ink);fill:none;stroke-width:2.2;stroke-linecap:round;stroke-linejoin:round}
-.zs-ring{position:absolute;inset:0;border-radius:50%;border:2px solid rgba(135,216,206,.25)}
-.zs-spin{position:absolute;inset:0;margin:auto;transform-origin:center;animation:spin 7s linear infinite}
-.zs-live{display:flex;align-items:center;gap:22px;margin-top:26px}
-.zs-live-col{text-align:center;min-width:82px}
-.zs-live-num{font-size:30px;font-weight:820;letter-spacing:-.02em;color:var(--ink);font-variant-numeric:tabular-nums}
-.zs-sets-tot{font-size:16px;font-weight:650;color:var(--muted)}
-.zs-live-lab{font-size:10px;font-weight:750;letter-spacing:.18em;text-transform:uppercase;color:var(--muted);margin-top:7px}
-.zs-live-div{width:1px;height:36px;background:var(--stroke-hi)}
+/* ===== In-session tracking screen — sage field, soft green-black vignette, radial dial ===== */
+.zs{position:relative;width:100%;max-width:432px;height:100dvh;max-height:936px;margin:0 auto;overflow:hidden;
+  display:flex;flex-direction:column;color:#EEF1E8;
+  /* one gradient, many stops → a buttery falloff with no visible ring/edge */
+  background:
+    radial-gradient(92% 78% at 50% 49%,
+      #010703 0%, #010703 26%,
+      rgba(2,9,5,.96) 36%,
+      rgba(2,10,6,.88) 44%,
+      rgba(3,12,7,.74) 52%,
+      rgba(3,14,8,.56) 60%,
+      rgba(4,16,9,.38) 68%,
+      rgba(5,18,10,.22) 77%,
+      rgba(6,20,12,.1) 87%,
+      rgba(6,22,13,.03) 95%,
+      rgba(6,22,13,0) 100%),
+    linear-gradient(163deg,#A9BFAE 0%,#93AB99 42%,#88A28F 72%,#ADC2B3 100%)}
+.zs .statusbar{color:#18241C}
+.zs-x{position:absolute;top:52px;left:20px;z-index:4;width:34px;height:34px;border-radius:50%;
+  display:grid;place-items:center;color:#18241C;background:rgba(0,0,0,.05);border:1px solid rgba(0,0,0,.16)}
+.zs-x svg{width:14px;height:14px;stroke-width:2;stroke:currentColor}
+/* the phone-down line — upright, same family as the rest of the app */
+.zs-title{position:absolute;left:0;right:0;top:11.5%;z-index:3;margin:0;padding:0 44px;
+  text-align:center;font-weight:400;font-style:normal;
+  font-size:21px;line-height:1.34;letter-spacing:.004em;color:#EDF0E7}
+
+/* dial sits dead-centre of the screen */
+.zs-dial{position:absolute;top:50%;left:50%;transform:translate(-50%,-50%);z-index:1;
+  width:min(320px,82vw,46vh);aspect-ratio:1;display:grid;place-items:center}
+.zs-dial svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible;
+  transform-origin:center;animation:spin 26s linear infinite}
+/* the lime progress arc is driven per-frame in JS (zsSetProgress) — no CSS
+   transition here, or it would fight the sweep */
+/* held still through the Ready!/Start! count-in, then it turns */
+.zs-dial.is-still svg{animation-play-state:paused}
+@media (prefers-reduced-motion:reduce){.zs-dial svg{animation:none}}
+/* dead-centre in the dial so the dashed guides converge on the puck's centre.
+   Cream disc + a thin keyline ring set off by a dark gap, matched to the reference */
+.zs-puck{position:relative;z-index:2;width:31%;aspect-ratio:1;border-radius:50%;
+  background:radial-gradient(120% 120% at 36% 28%,#FCFAF3 0%,#F1EDE1 72%,#E9E4D5 100%);
+  display:grid;place-items:center;
+  box-shadow:0 30px 44px -8px rgba(0,0,0,.72),0 10px 18px rgba(0,0,0,.42)}
+.zs-puck::before{content:"";position:absolute;inset:-7px;border-radius:50%;
+  border:1.5px solid rgba(255,255,255,.42)}
+/* the ORVIA product sits small inside the disc — sized by width (a definite %
+   of the round puck) so the tall silhouette never stretches the puck or crops */
+.zs-prod{width:16.5%;height:auto;display:block;
+  filter:drop-shadow(0 2px 5px rgba(0,0,0,.16))}
+
+/* z 11: above the camera layer (z 10), so the camera window's shadow can't dim the numbers */
+.zs-live{position:absolute;left:0;right:0;z-index:11;display:grid;place-items:center;
+  top:calc(50% + min(320px,82vw,46vh)*.4375);bottom:calc(78px + env(safe-area-inset-bottom,0))}
+.zs-live-set{grid-area:1/1;display:flex;align-items:center;justify-content:center;gap:24px}
+.zs-live-set.is-off{visibility:hidden}
+/* the count-in owns the gap between the dial's foot and the button's head */
+/* centred between the ring (87.5% of the dial box) and the End button; the padding cancels the
+   digits sitting low in their line box, so the glyphs — not the box — are what is centred */
+.zs-cue{position:absolute;left:0;right:0;z-index:3;padding-bottom:.125em;
+  top:calc(50% + min(320px,82vw,46vh)*.4375);bottom:calc(78px + env(safe-area-inset-bottom,0));
+  display:grid;place-items:center;
+  font-size:clamp(44px,17vw,74px);font-weight:830;letter-spacing:-.04em;color:#F4F6EF;
+  animation:cueIn .32s cubic-bezier(.2,.8,.25,1) both}
+.zs-cue.num{font-variant-numeric:tabular-nums;font-size:clamp(56px,22vw,96px);letter-spacing:-.05em}
+.zs-cue.in{animation:cueIn .32s cubic-bezier(.2,.8,.25,1) both}
+@keyframes cueIn{from{opacity:0;transform:scale(.84)}to{opacity:1;transform:scale(1)}}
+.zs-live-col{text-align:center;min-width:100px}
+.zs-live-num{font-size:42px;font-weight:820;letter-spacing:-.03em;color:#F4F6EF;font-variant-numeric:tabular-nums;line-height:1}
+.zs-sets-tot{font-size:21px;font-weight:640;color:rgba(244,246,239,.45)}
+.zs-live-lab{font-size:11px;font-weight:620;letter-spacing:.18em;text-transform:uppercase;color:rgba(244,246,239,.45);margin-top:11px}
+.zs-live-div{width:1px;height:48px;background:rgba(255,255,255,.16)}
+
+.zs-foot{position:absolute;left:24px;right:24px;bottom:calc(20px + env(safe-area-inset-bottom,0));z-index:3;
+  display:flex;flex-direction:column;align-items:center}
+/* same glass as the cover's CTA: clear through the middle, the wall does the work */
+.zs-end{position:relative;isolation:isolate;overflow:hidden;
+  width:100%;height:58px;border-radius:var(--r-pill);font-weight:780;font-size:15px;
+  color:#fff;letter-spacing:-.01em;background:transparent;
+  text-shadow:0 1px 2px rgba(2,8,4,.55),0 2px 16px rgba(2,8,4,.5);
+  border:1px solid rgba(255,255,255,.5);
+  box-shadow:inset 0 2px 1.5px -1px rgba(255,255,255,.9),
+             inset 2px 0 2px -1px rgba(255,255,255,.5),
+             inset 0 -2px 1.5px -1px rgba(255,255,255,.55),
+             inset -2px 0 2px -1px rgba(255,255,255,.36),
+             inset 0 0 30px rgba(255,255,255,.1),
+             0 16px 34px -18px rgba(0,0,0,.5)}
+/* the refracting wall — a hairline where the bend is sharpest */
+.zs-end::after{content:"";position:absolute;inset:0;border-radius:inherit;
+  pointer-events:none;padding:.5px;
+  backdrop-filter:blur(6px) saturate(200%) brightness(1.3);
+  -webkit-backdrop-filter:blur(6px) saturate(200%) brightness(1.3);
+  background:linear-gradient(180deg,rgba(255,255,255,.42),rgba(255,255,255,.06) 42%,
+    rgba(255,255,255,.1) 62%,rgba(255,255,255,.3));
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  mask-composite:exclude}
+.zs-end:active{transform:scale(.985)}
+
+/* ===== Motion-camera view — opens out of the dial's centre disc a few seconds in ===== */
+/* The sage field, title, X and End button stay put. The cream disc swells into the
+   viewfinder window while the dial rings melt away; the readouts move under the window. */
+.zs-cam{position:absolute;inset:0;z-index:10;pointer-events:none}
+.zc-window{position:absolute;left:50%;top:50%;transform:translate(-50%,-50%);overflow:hidden;opacity:0;
+  /* starts exactly as the puck: 31% of the dial */
+  width:calc(min(320px,82vw,46vh)*.31);height:calc(min(320px,82vw,46vh)*.31);border-radius:50%;
+  background:radial-gradient(130% 100% at 50% 38%,#0b1913 0%,#050d09 60%,#020504 100%);
+  box-shadow:0 30px 44px -8px rgba(0,0,0,.72),0 10px 18px rgba(0,0,0,.42);
+  transition:width .95s cubic-bezier(.22,.9,.24,1),height .95s cubic-bezier(.22,.9,.24,1),top .95s cubic-bezier(.22,.9,.24,1),
+             border-radius .95s cubic-bezier(.22,.9,.24,1),box-shadow .95s ease,opacity .6s ease}
+.zs-cam.show .zc-window{opacity:1;width:min(calc(100% - 52px),380px);height:52%;top:46%;border-radius:30px;
+  box-shadow:0 34px 60px -22px rgba(0,0,0,.7),0 0 0 1px rgba(255,255,255,.1)}
+.zc-inner{position:absolute;inset:0;z-index:0;opacity:0;transition:opacity .55s ease .55s}
+.zs-cam.show .zc-inner{opacity:1}
+/* the live camera stream goes here; until then a faint scan texture reads as an idle feed */
+.zc-feed{position:absolute;inset:0;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.03) 0 1px,transparent 1px 4px)}
+/* viewfinder corners around the area the golfer should fill */
+.zc-frame{position:absolute;inset:7% 8%}
+.zc-frame i{position:absolute;width:24px;height:24px;border:2px solid rgba(238,241,232,.72)}
+.zc-frame i:nth-child(1){left:0;top:0;border-right:0;border-bottom:0;border-top-left-radius:8px}
+.zc-frame i:nth-child(2){right:0;top:0;border-left:0;border-bottom:0;border-top-right-radius:8px}
+.zc-frame i:nth-child(3){left:0;bottom:0;border-right:0;border-top:0;border-bottom-left-radius:8px}
+.zc-frame i:nth-child(4){right:0;bottom:0;border-left:0;border-top:0;border-bottom-right-radius:8px}
+.zc-pose{position:absolute;left:50%;top:50%;height:76%;aspect-ratio:200/380;transform:translate(-50%,-50%)}
+.zc-pose svg{position:absolute;inset:0;width:100%;height:100%;overflow:visible}
+.zc-ground{stroke:rgba(238,241,232,.22);stroke-width:1.5;stroke-dasharray:3 5}
+.zc-club{stroke:rgba(238,241,232,.55);stroke-width:2.4;stroke-linecap:round;fill:rgba(238,241,232,.55)}
+.zc-bones line{stroke:#D6E8A4;stroke-width:2.6;stroke-linecap:round;opacity:.92}
+.zc-joints circle{fill:#07100b;stroke:#E4F2BC;stroke-width:2.2;transform-box:fill-box;transform-origin:center;
+  animation:zcJoint 2.4s ease-in-out infinite}
+@keyframes zcJoint{0%,100%{transform:scale(1)}50%{transform:scale(1.28)}}
+.zc-chip{position:absolute;top:14px;left:50%;transform:translateX(-50%);display:inline-flex;align-items:center;gap:7px;
+  height:25px;padding:0 12px 0 10px;border-radius:99px;background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.18);
+  font-size:11.5px;font-weight:620;letter-spacing:.01em;color:#EEF1E8;white-space:nowrap}
+.zc-chip i{width:6px;height:6px;border-radius:50%;background:#A8D58C;box-shadow:0 0 0 0 rgba(168,213,140,.55);animation:zcDot 1.8s ease-out infinite}
+@keyframes zcDot{0%{box-shadow:0 0 0 0 rgba(168,213,140,.55)}80%,100%{box-shadow:0 0 0 7px rgba(168,213,140,0)}}
+.zc-hint{position:absolute;left:0;right:0;bottom:13px;margin:0;text-align:center;font-size:11.5px;font-weight:500;color:rgba(244,246,239,.55)}
+/* what the camera replaces */
+.zs.cam-on .zs-dial{opacity:0;transform:translate(-50%,-50%) scale(1.14);transition:opacity .55s ease,transform 1.1s ease}
+@media(prefers-reduced-motion:reduce){.zc-joints circle,.zc-chip i{animation:none}.zc-window,.zc-inner{transition:none}}
 
 /* Animations */
 .pulse{animation:pulse 1.9s ease-in-out infinite}
@@ -398,35 +681,46 @@ img,svg{max-width:100%}
 @keyframes spin{to{transform:rotate(360deg)}}
 
 .toast{position:absolute;left:50%;bottom:calc(var(--tab-h) + 18px);transform:translateX(-50%) translateY(10px);
-  background:rgba(16,18,12,.96);border:1px solid var(--stroke-hi);color:var(--ink);padding:12px 18px;border-radius:var(--r-pill);
+  background:rgba(20,22,15,.95);border:1px solid rgba(255,255,255,.14);color:#F7F6EC;padding:12px 18px;border-radius:var(--r-pill);
   font-size:13.5px;font-weight:620;opacity:0;pointer-events:none;transition:.28s;z-index:60;white-space:nowrap;backdrop-filter:blur(12px)}
 .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
 
-/* ---- Glow joint-mannequin (session report signature) --------------------*/
-.avatarWrap{position:relative;z-index:1;max-width:330px;margin:0 auto}
-.glowfig{display:block;width:100%;height:auto;overflow:visible}
-.figbloom{filter:blur(7px);opacity:.55}
-.figbody{opacity:.66;filter:drop-shadow(0 0 7px rgba(135,216,206,.45))}
-.figbody line,.figbloom line{stroke:url(#bodyGrad);stroke-linecap:round;fill:none}
-.figbody .torso,.figbloom .torso{fill:url(#bodyGrad)}
-.figbody .fig-head,.figbloom .fig-head{fill:url(#headGrad)}
-.figwire line{stroke:var(--lime);stroke-width:1.5;stroke-linecap:round;opacity:.82}
-.figwire .club{stroke:rgba(245,246,240,.6);stroke-width:1.6}
-.figwire circle{fill:var(--lime);filter:drop-shadow(0 0 3px rgba(135,216,206,.9))}
+/* ---- Posture photo + joint markers (session report signature) -----------*/
+.avatarWrap{position:relative;z-index:1;width:100%;margin:0 auto}
+/* the six stills sit on top of one another and cross-fade */
+.glow-photo{display:block;width:100%;height:auto;border-radius:14px;opacity:0;transition:opacity .12s linear}
+.glow-photo.on{opacity:1}
+.avatarWrap .glow-photo:not(:first-of-type){position:absolute;inset:0}
+/* the play button sits dead-centre of the frame and steps aside while it runs */
+.swing-play{position:absolute;right:10px;bottom:8px;z-index:4;width:34px;height:34px;
+  border-radius:50%;display:grid;place-items:center;color:var(--lime-deep);
+  background:rgba(255,255,255,.82);backdrop-filter:blur(10px);
+  box-shadow:0 6px 16px -8px rgba(20,28,18,.45)}
+.swing-play svg{grid-area:1/1;width:14px;height:14px}
+.swing-play .ic-play{margin-left:1.5px}
+.swing-play .ic-pause,.swing-play.armed .ic-play{display:none}
+.swing-play.armed .ic-pause{display:block}
+.swing-play{transition:opacity .22s, transform .22s}
+.swing-play:active{transform:scale(.94)}
+.avatar-stage.is-playing .swing-play{opacity:0;pointer-events:none;transform:scale(.85)}
 
-/* interactive markers */
-.mk{cursor:pointer}
-.mk-hit{fill:transparent}
-.mk-dot{filter:drop-shadow(0 0 4px currentColor)}
-.mk-good .mk-dot{fill:var(--lime)}.mk-good{color:var(--lime)}
-.mk-good .mk-ring{stroke:var(--lime)}
-.mk-alert .mk-dot{fill:var(--alert)}.mk-alert{color:var(--alert)}
-.mk-alert .mk-ring{stroke:var(--alert)}
-.mk-ring{fill:none;stroke-width:1.6;transform-box:fill-box;transform-origin:center;
-  animation:ripple 2.6s ease-out infinite}
-.mk-ring2{animation-delay:1.3s}
-@keyframes ripple{0%{transform:scale(.45);opacity:.75}70%{opacity:.12}100%{transform:scale(2.6);opacity:0}}
-.mk:hover .mk-dot,.mk:focus-visible .mk-dot{transform-box:fill-box;transform-origin:center;transform:scale(1.25)}
+/* swing clip is pre-cropped to the stage's aspect ratio, so it fills the box exactly */
+.swing-vid{position:absolute;inset:0;width:100%;height:100%;object-fit:cover;z-index:2;
+  background:#F5F9E5;display:block}
+.avatar-stage.is-playing .avatar-grid{opacity:0}
+svg.mk-layer{position:absolute;inset:0;width:100%;height:100%;overflow:visible;transition:opacity .18s}
+.avatar-stage.is-playing svg.mk-layer{opacity:0;pointer-events:none}
+.glowfig{display:block;width:100%;height:auto;overflow:visible}
+
+/* joint markers — flat single-colour circles, no bones, each taps to a close-up */
+/* invisible tap targets over the hand-drawn joint dots — a soft ring on hover/focus only */
+.jd{cursor:pointer}
+.jd-hit{fill:transparent;transition:fill .12s}
+.jd:hover .jd-hit,.jd:focus-visible .jd-hit{fill:rgba(63,95,88,.22)}
+/* flagged joint for the shown phase — solid point-green dot, bone halo so it
+   still reads where the photo goes dark */
+.jd-mark{fill:var(--alert-mark);stroke:var(--lime-ink);stroke-width:1}
+.jd-bad:hover .jd-hit,.jd-bad:focus-visible .jd-hit{fill:rgba(63,95,88,.32)}
 
 /* leader lines + callouts */
 .lead{stroke:var(--alert);stroke-width:1;opacity:.75;stroke-dasharray:1;stroke-dashoffset:1;
@@ -434,7 +728,7 @@ img,svg{max-width:100%}
 @keyframes draw{to{stroke-dashoffset:0}}
 .callout{cursor:pointer;animation:coIn .4s .35s both}
 @keyframes coIn{from{opacity:0}to{opacity:1}}
-.callout rect{fill:rgba(14,16,10,.9);stroke:var(--alert);stroke-opacity:.45;stroke-width:.8}
+.callout rect{fill:rgba(255,255,255,.92);stroke:var(--alert);stroke-opacity:.4;stroke-width:.8}
 .callout .co-t{fill:var(--muted);font-size:5.6px;font-weight:700;letter-spacing:.4px;text-transform:uppercase}
 .callout .co-v{fill:var(--alert);font-size:8px;font-weight:800}
 
@@ -448,8 +742,8 @@ img,svg{max-width:100%}
   backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);opacity:0;transition:opacity .28s ease}
 .detail-overlay.in .detail-back{opacity:1}
 .detail-card{position:relative;width:100%;max-width:392px;max-height:100%;overflow-y:auto;
-  background:linear-gradient(180deg,#0C0D09,#090A06);border:1px solid var(--stroke-hi);
-  border-radius:28px;padding:14px 18px 22px;box-shadow:0 40px 90px -30px rgba(0,0,0,.85);
+  background:linear-gradient(180deg,#FFFFFF,#F3F8E2);border:1px solid var(--stroke-hi);
+  border-radius:28px;padding:14px 18px 22px;box-shadow:0 40px 90px -30px rgba(20,24,14,.3);
   transform:scale(.05);opacity:.15;
   transition:transform .36s cubic-bezier(.2,.9,.25,1),opacity .26s ease}
 .detail-card::-webkit-scrollbar{width:0}.detail-card{scrollbar-width:none}
@@ -457,11 +751,11 @@ img,svg{max-width:100%}
 .detail-overlay.out .detail-card{transform:scale(.05);opacity:0}
 .detail-overlay.out .detail-back{opacity:0}
 .detail-fig{position:relative;width:100%;height:320px;border-radius:18px;overflow:hidden;margin-top:6px;
-  background:radial-gradient(72% 60% at 50% 14%,rgba(135,216,206,.16),transparent 62%),
-    linear-gradient(180deg,#0E0F0B,#090A06);border:1px solid var(--stroke)}
+  background:radial-gradient(72% 60% at 50% 14%,rgba(63,95,88,.14),transparent 62%),
+    linear-gradient(180deg,#FFFFFF,#F5F9E5);border:1px solid var(--stroke)}
 .detail-fig .glowfig{position:absolute;inset:0;width:100%;height:100%;max-width:none}
 .detail-loop{position:absolute;top:12px;left:12px}
-.pill-alert{background:var(--alert-soft);border-color:rgba(255,107,91,.4);color:var(--alert)}
+.pill-alert{background:var(--alert-soft);border-color:rgba(63,95,88,.3);color:var(--alert)}
 .icon-btn.sm{width:36px;height:36px}.icon-btn.sm svg{width:17px;height:17px}
 
 /* ---- Home D-day bar + Missions -----------------------------------------*/
@@ -473,35 +767,36 @@ img,svg{max-width:100%}
 .dday-bar .chev{display:flex}
 .dday-bar .chev svg{width:18px;height:18px;stroke:var(--muted-2);fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 
+/* on the Missions screen the cards sit over the course photo, so they thin out
+   and lean on the blur instead of a solid fill */
+.screen.on-photo .card{background:rgba(255,255,255,.6);border-color:rgba(255,255,255,.5);
+  backdrop-filter:blur(20px) saturate(125%);-webkit-backdrop-filter:blur(20px) saturate(125%);
+  box-shadow:0 14px 34px -20px rgba(20,28,18,.3),inset 0 1px 0 rgba(255,255,255,.6)}
+.screen.on-photo .mission-card{background:rgba(255,255,255,.48)}
+.screen.on-photo .rp-hero{background:rgba(255,255,255,.68)}
+
 .mission-card{width:100%;text-align:left;transition:transform .14s,border-color .14s}
 .mission-card:active{transform:scale(.99)}
 .mission-card.is-done{opacity:.62}
 .mcheck{width:26px;height:26px;border-radius:50%;border:1.6px solid var(--stroke-hi);flex:0 0 auto;
   display:grid;place-items:center;margin-top:2px}
-.mcheck.done{background:#fff;border-color:#fff}
-.diff-easy{color:var(--lime);border-color:rgba(135,216,206,.3);background:rgba(135,216,206,.1)}
-.diff-hard{color:var(--warn);border-color:rgba(240,181,74,.34);background:var(--warn-soft)}
+.mcheck.done{background:#fff;border-color:#fff;box-shadow:0 2px 6px rgba(20,24,14,.2)}
+.diff-easy{color:var(--lime-deep);border-color:rgba(63,95,88,.3);background:rgba(63,95,88,.1)}
+.diff-hard{color:var(--warn);border-color:rgba(220,202,86,.34);background:var(--warn-soft)}
 
-/* Missions: full-bleed photo background; every card floats as dark frosted glass */
+/* Missions: full-bleed photo background, lightened with a white wash so the
+   normal light-glass .card/.chip styling reads on top unchanged */
 .screen-bg{position:absolute;inset:0;z-index:2;display:none;
-  background:#0c1310 url(tttt.webp) center/cover no-repeat}
+  background:#0E1A10 url(mission-bg2.jpg) center 22%/cover no-repeat}
 .screen-bg::after{content:"";position:absolute;inset:0;
-  background:linear-gradient(180deg,rgba(6,10,9,.58) 0%,rgba(5,8,7,.72) 52%,rgba(3,6,5,.85) 100%)}
+  background:linear-gradient(180deg,rgba(255,255,255,.4) 0%,rgba(255,255,255,.16) 26%,
+    rgba(250,250,246,.34) 58%,rgba(244,243,241,.86) 84%,var(--bg) 100%)}
 .screen-bg.show{display:block}
-.on-photo .card{background:linear-gradient(152deg,rgba(255,255,255,.15),rgba(255,255,255,.06));
-  border-color:rgba(255,255,255,.26);
-  box-shadow:0 16px 40px -20px rgba(0,0,0,.5),inset 0 1px 0 rgba(255,255,255,.4)}
-.on-photo .chip{background:rgba(255,255,255,.08);border-color:rgba(255,255,255,.24);color:rgba(255,255,255,.85)}
-.on-photo .chip[aria-pressed="true"]{background:#fff;color:#0c1210;border-color:#fff}
-.on-photo .head .h1,.on-photo .sec-title .h3{text-shadow:0 2px 14px rgba(0,0,0,.5)}
-.rp-hero{border-color:rgba(255,255,255,.34)!important}
-.rp-hero .h1{text-shadow:0 2px 16px rgba(0,0,0,.5)}
 
 /* ---- Launch / landing screen -------------------------------------------*/
-#launch.show{display:grid;place-items:center;background:#050607}
+#launch.show{display:grid;place-items:center}
 .launch{position:relative;width:100%;max-width:432px;height:100dvh;max-height:936px;
-  overflow:hidden;display:flex;flex-direction:column;color:#fff}
-@media(min-width:480px){.launch{height:min(93vh,912px);border-radius:54px}}
+  overflow:hidden;display:flex;flex-direction:column;color:var(--ink)}
 /* base fallback gradient (golf-course palette) — shows if the photo is absent */
 .launch-fallback{position:absolute;inset:0;background:
   radial-gradient(120% 70% at 50% 4%, #2b6f7e 0%, #184b57 26%, transparent 58%),
@@ -509,31 +804,143 @@ img,svg{max-width:100%}
 .launch-fallback::after{content:"";position:absolute;inset:0;background:
   linear-gradient(180deg,transparent 44%,rgba(150,110,55,.16) 55%,transparent 64%)}
 /* the actual photo — build inlines it as a data URI for the single-file builds */
-.launch-bg{position:absolute;inset:0;background-image:url(image-1784657043929.webp);
-  background-size:cover;background-position:center 30%;filter:saturate(.9) brightness(.8) contrast(1.03)}
-/* dark scrim, heavier toward the bottom for legibility */
-.launch-scrim{position:absolute;inset:0;background:linear-gradient(180deg,
-  rgba(6,10,12,.22) 0%,rgba(6,10,12,0) 22%,rgba(6,10,12,.32) 52%,
-  rgba(6,10,12,.8) 80%,rgba(4,7,9,.96) 100%)}
+/* pushed in past `cover` so the golfer reads large, and held to the right third —
+   the empty sky on the left is what gets cropped away */
+/* the photo is a rotated layer inside a clipping box: it leans left a touch, pivoting on the
+   torso (48% / 60% of the image), and runs past the bottom edge so the cut at the legs
+   stays off-screen */
+.launch-bg{position:absolute;inset:0;overflow:hidden;background:#f9faf9}
+.launch-bg::before{content:"";position:absolute;left:54%;top:66%;height:114%;aspect-ratio:1655/1824;
+  background:url(cover-golf.jpg) center/100% 100% no-repeat;
+  transform-origin:0 0;transform:rotate(-5.5deg) translate(-48%,-60%)}
+/* light scrim, heavier toward the bottom for legibility (bright product photo) */
+/* stops just short of solid at the foot, so the photo still reads behind the
+   glass button and the blur has something to work with */
+/* no scrim: the photo runs edge to edge and the button is the only glass */
+/* the supplied lockup is white, used as is */
+.launch-logo{display:block;width:120px;height:auto;margin:0 0 24px 2px}
 
-.launch-top{position:relative;z-index:2;flex:0 0 auto;padding:60px 28px 0}
-.brand{display:inline-flex;align-items:center;gap:10px;font-weight:850;font-size:20px;letter-spacing:.16em}
-.brand svg{width:26px;height:26px;flex:0 0 auto}
-.launch-bottom{position:relative;z-index:2;margin-top:auto;padding:0 28px 46px}
-.launch-slogan{font-size:33px;font-weight:850;line-height:1.04;letter-spacing:-.02em;
-  text-transform:uppercase;text-wrap:balance;text-shadow:0 2px 24px rgba(0,0,0,.4)}
-.launch-slogan em{font-style:normal;color:var(--lime)}
-.launch-sub{font-size:14.5px;line-height:1.5;color:rgba(255,255,255,.78);margin-top:14px;max-width:330px}
-.launch-cta{display:flex;gap:12px;margin-top:26px}
-.launch-cta .btn{flex:1;height:56px;font-size:15.5px;font-weight:750}
-/* transparent-glass CTAs — the golf photo shows through almost fully; only
-   a light blur + a hairline white border make the glass; text stays white */
-.btn-login,.btn-getstarted{color:#fff;
-  backdrop-filter:blur(16px) saturate(115%);-webkit-backdrop-filter:blur(16px) saturate(115%);
-  text-shadow:0 1px 6px rgba(0,0,0,.55)}
-.btn-login{background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.24)}
-.btn-getstarted{background:rgba(255,255,255,.1);border:1px solid rgba(255,255,255,.42);font-weight:800}
+.launch-bottom{position:relative;z-index:2;margin-top:auto;
+  padding:0 28px calc(20px + env(safe-area-inset-bottom,0))}
+.launch-slogan{text-shadow:0 1px 2px rgba(255,255,255,.9),0 3px 26px rgba(255,255,255,.85);font-size:33px;font-weight:850;line-height:1.04;letter-spacing:-.02em;
+  text-transform:uppercase;text-wrap:balance}
+.launch-slogan em{font-style:normal;color:var(--lime-deep)}
+.launch-sub{font-size:14.5px;line-height:1.5;color:rgba(16,20,12,.86);font-weight:620;
+  margin-top:14px;max-width:330px;text-shadow:0 1px 2px rgba(255,255,255,.9),0 2px 18px rgba(255,255,255,.85)}
+.launch-cta{display:flex;margin-top:0}
+.launch-cta .btn{flex:1;height:62px;font-size:16px;font-weight:750}
+/* Liquid glass: the pane itself is fully clear — no tint, no blur, the photo reads
+   through it sharp. Only the outer wall of the glass bends the light, so the
+   refraction lives in a ring masked to the rim (mask-composite cuts the middle out). */
+.btn-getstarted{position:relative;isolation:isolate;overflow:hidden;
+  background:transparent;
+  color:#13181a;font-weight:800;letter-spacing:-.01em;
+  text-shadow:0 1px 1px rgba(255,255,255,.7);
+  border:1px solid rgba(255,255,255,.6);
+  /* specular: light gathers along the top-left wall and glances off the bottom-right */
+  box-shadow:inset 0 2px 1.5px -1px rgba(255,255,255,.95),
+             inset 2px 0 2px -1px rgba(255,255,255,.55),
+             inset 0 -2px 1.5px -1px rgba(255,255,255,.6),
+             inset -2px 0 2px -1px rgba(255,255,255,.4),
+             inset 0 0 30px rgba(255,255,255,.12),
+             0 16px 34px -18px rgba(10,16,10,.5)}
+/* the frosted pane lives on its own layer, clipped to the pill, so the blur can never
+   spill past the button's edge and haze the photo around it */
+.btn-getstarted::before{content:"";position:absolute;inset:-1px;z-index:-1;border-radius:inherit;
+  pointer-events:none;background:rgba(255,255,255,.66);
+  backdrop-filter:blur(16px) saturate(150%);-webkit-backdrop-filter:blur(16px) saturate(150%);
+  clip-path:inset(0 round 999px)}
+/* the wall of the glass — a hairline where the bend is sharpest */
+.btn-getstarted::after{content:"";position:absolute;inset:0;border-radius:inherit;
+  pointer-events:none;padding:.5px;clip-path:inset(0 round 999px);
+  backdrop-filter:blur(6px) saturate(200%) brightness(1.16);
+  -webkit-backdrop-filter:blur(6px) saturate(200%) brightness(1.16);
+  background:linear-gradient(180deg,rgba(255,255,255,.42),rgba(255,255,255,.06) 42%,
+    rgba(255,255,255,.1) 62%,rgba(255,255,255,.3));
+  -webkit-mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  -webkit-mask-composite:xor;
+  mask:linear-gradient(#000 0 0) content-box,linear-gradient(#000 0 0);
+  mask-composite:exclude}
 .launch-cta .btn:active{transform:scale(.98)}
+
+/* Cover → camera page: the page fades in over the cover (which stays put underneath until it is
+   fully covered), and the stand rises into place instead of the whole page snapping in. */
+#onboarding.from-launch{animation:ovFade .6s ease both}
+#onboarding.from-launch .ob-body{animation:none}
+#onboarding.from-launch .cp-img{animation:cpIn .9s cubic-bezier(.2,.75,.2,1) .12s both}
+#onboarding.from-launch .ob-title{animation:cpTitleIn .7s cubic-bezier(.2,.75,.2,1) .4s both}
+@keyframes ovFade{from{opacity:0}to{opacity:1}}
+@keyframes cpIn{from{opacity:0;transform:translateY(34px)}to{opacity:1;transform:none}}
+@keyframes cpTitleIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+
+/* ===== Camera setup — the stand's camera head as the onboarding hero ====== */
+/* full-bleed: the product runs to both edges, as in the reference */
+/* this step has no text block: the stand runs the full height of the screen, uncropped,
+   with the headline sitting on the empty white to its right */
+.ob-body:has(.cp-stage){position:relative;padding:0;justify-content:flex-start}
+.ob-body:has(.cp-stage) .ob-hero{position:absolute;inset:0;margin:0}
+.ob-body:has(.cp-stage) .ob-title{position:absolute;z-index:4;left:44%;right:20px;bottom:34px;
+  font-size:32px;line-height:1.12}
+.cp-stage{position:relative;width:100%;height:100%;overflow:hidden}
+/* the stand runs under the button — a white fade swallows it instead of a hard cut */
+/* the fade lives in the body, between the image (z auto) and the headline (z 4), so the
+   headline sits on top of it at full strength */
+.ob-body:has(.cp-stage)::after{content:"";position:absolute;left:0;right:0;bottom:0;
+  height:150px;pointer-events:none;z-index:2;
+  background:linear-gradient(to bottom,rgba(255,255,255,0) 0%,rgba(255,255,255,.72) 45%,#fff 100%)}
+/* the halftone block the product sits against */
+.cp-dots{position:absolute;right:-34px;top:20%;width:46%;height:28%;border-radius:34px;
+  background-image:radial-gradient(circle,rgba(20,24,14,.15) 1.15px,transparent 1.15px);
+  background-size:11px 11px}
+/* the wrapper carries the image's own aspect, so the halo below can be pinned to the
+   lens in image coordinates instead of guessed against the stage. */
+.cp-img{position:absolute;left:12%;top:15%;height:122%;aspect-ratio:760/2460}
+.cp-shot{display:block;width:100%;height:100%;
+  filter:drop-shadow(0 14px 18px rgba(24,30,20,.12))}
+/* a soft green halo on the lens, echoing the ring on the product */
+.cp-ring{position:absolute;left:45.2%;top:14.9%;width:33%;aspect-ratio:1/1;border-radius:50%;
+  background:radial-gradient(circle,rgba(96,168,72,.34),transparent 66%);
+  animation:cpPulse 2.6s ease-in-out infinite}
+@keyframes cpPulse{
+  0%,100%{transform:translate(-50%,-50%) scale(1);opacity:.85}
+  50%    {transform:translate(-50%,-50%) scale(1.18);opacity:.45}}
+.cp-ring{transform:translate(-50%,-50%)}
+@media(prefers-reduced-motion:reduce){.cp-ring{animation:none}}
+
+.cp-chip{position:absolute;left:14px;bottom:12px;display:flex;align-items:center;gap:8px;
+  padding:9px 15px 9px 12px;border-radius:99px;background:rgba(255,255,255,.86);
+  backdrop-filter:blur(12px);box-shadow:0 8px 20px -12px rgba(24,30,20,.4);
+  font-size:12.5px;font-weight:680;letter-spacing:-.01em;color:var(--muted-2)}
+.cp-chip i{width:7px;height:7px;border-radius:50%;background:var(--muted);transition:.3s}
+.cp-chip.ok{color:var(--ink)}
+.cp-chip.ok i{background:var(--lime-deep);box-shadow:0 0 0 4px rgba(96,168,72,.18)}
+
+.cp-read{display:grid;grid-template-columns:repeat(3,1fr);gap:8px;
+  margin-top:16px;padding-top:14px;border-top:1px solid rgba(20,24,14,.1)}
+.cp-cell{display:flex;flex-direction:column;gap:4px}
+.cp-cell span{font-size:10px;font-weight:620;letter-spacing:.13em;text-transform:uppercase;color:var(--muted)}
+.cp-cell b{font-size:16px;font-weight:800;letter-spacing:-.02em;font-variant-numeric:tabular-nums}
+/* the onboarding title carries the reference's light/heavy split on this step */
+.ob-title b{font-weight:850}
+.ob-title:has(b){font-weight:300;letter-spacing:-.03em}
+
+/* every phone-shaped container (main app, launch, onboarding, zero-screen)
+   shares the exact same chassis: size, corner radius, bezel + drop shadow.
+   The bezel is a real `border` (not a box-shadow ring) so the containing
+   block for absolutely-positioned children (tabbar, full-bleed photos, …)
+   shrinks inside it — nothing can ever paint over or past the guideline.
+   NOTE: this must stay AFTER .phone/.launch/.ob-inner/.zs's own rules above —
+   same specificity, so an earlier position would be silently overridden by
+   whichever of those rules comes later in the file. */
+@media(min-width:480px){
+  /* on desktop the phone is a fixed-size device that scales as a whole
+     (JS sets --pscale from the viewport height) so it never looks squashed
+     and the inner 432px layout is preserved at every size */
+  .phone,.launch,.ob-inner,.zs{height:912px;max-height:912px;width:432px;max-width:432px;
+    border-radius:54px;border:10px solid #14170f;box-shadow:var(--phone-shadow);
+    transform:scale(var(--pscale,1));transform-origin:center center}
+  .notch{display:block}
+}
 
 /* ---- Past-day record modal (calendar → session view) — kept inside phone -*/
 .record-overlay{position:absolute;inset:0;z-index:118;display:none}
@@ -542,9 +949,9 @@ img,svg{max-width:100%}
   backdrop-filter:blur(5px);-webkit-backdrop-filter:blur(5px);opacity:0;transition:opacity .3s ease}
 .record-overlay.in .record-back{opacity:1}
 .record-card{position:relative;width:100%;max-width:404px;max-height:100%;
-  background:linear-gradient(180deg,#0C0D09,#090A06);border:1px solid var(--stroke-hi);
+  background:linear-gradient(180deg,#FFFFFF,#F3F8E2);border:1px solid var(--stroke-hi);
   border-radius:28px;display:flex;flex-direction:column;overflow:hidden;
-  box-shadow:0 30px 80px -30px rgba(0,0,0,.85);
+  box-shadow:0 30px 80px -30px rgba(20,24,14,.3);
   transform:scale(.04);opacity:0;transform-origin:center;
   transition:transform .4s cubic-bezier(.2,.9,.25,1),opacity .3s ease}
 .record-overlay.in .record-card{transform:scale(1);opacity:1}
@@ -554,6 +961,117 @@ img,svg{max-width:100%}
 
 @media(prefers-reduced-motion:reduce){
   *{animation-duration:.001s!important;transition-duration:.05s!important}
-  .scan-ring,.pulse,.breathe,.mk-ring,.zs-spin{animation:none!important}
+  .scan-ring,.pulse,.breathe,.zs-spin{animation:none!important}
   .lead{stroke-dashoffset:0}
 }
+
+/* ===== Live tracking (live.js) — the camera window carries the real feed ===== */
+/* Everything here extends the motion-camera view above: same glass, same chip,
+   same pale-lime skeleton. Nothing new is introduced to the phone's hierarchy —
+   the readouts gain one column, the title carries the coach's line, and the
+   window gains the club's balance dial along its foot. */
+.zc-video{position:absolute;left:0;right:0;top:0;bottom:50px;width:100%;height:calc(100% - 50px);object-fit:cover;opacity:0;transition:opacity .6s ease}
+.zc-video.on{opacity:.9}
+.zc-video.mirror,.st-video.mirror{transform:scaleX(-1)}
+.zc-inner.is-live .zc-feed{z-index:1;opacity:.6}
+.zc-inner.is-live .zc-pose{display:none}
+.zc-canvas{position:absolute;left:0;right:0;top:0;bottom:50px;width:100%;height:calc(100% - 50px);z-index:2}
+.zc-inner.is-live .zc-feed{bottom:50px}
+.zc-inner.is-live .zc-frame{bottom:calc(50px + 4%)}
+.zc-inner.is-live::after{content:"";position:absolute;left:0;right:0;bottom:50px;height:1px;background:rgba(255,255,255,.08);z-index:4}
+.zc-inner.is-live .zc-frame{z-index:3}
+.zc-inner.is-live .zc-chip{z-index:4}
+.zc-chip{transition:background .2s}
+.zc-hint{z-index:4;transition:opacity .3s ease}
+.zc-inner.is-live .zc-hint{bottom:64px}
+.zc-hint.off{opacity:0}
+/* the grip dial, as a dark-glass segmented control — same anatomy as .seg-6 */
+.zc-modes{position:absolute;left:10px;right:10px;bottom:9px;z-index:5;pointer-events:auto;
+  display:grid;grid-template-columns:repeat(6,1fr);gap:2px;padding:3px;border-radius:var(--r-pill);
+  background:rgba(255,255,255,.08);border:1px solid rgba(255,255,255,.14);
+  backdrop-filter:blur(12px) saturate(120%);-webkit-backdrop-filter:blur(12px) saturate(120%)}
+.zc-modes button{height:28px;border-radius:var(--r-pill);font-size:10.5px;font-weight:620;letter-spacing:-.01em;
+  color:rgba(238,241,232,.62);transition:background .2s,color .2s}
+.zc-modes button[aria-checked="true"]{background:rgba(244,246,239,.94);color:#0c1210;box-shadow:0 2px 8px -2px rgba(0,0,0,.4)}
+.zc-modes button:active{transform:scale(.95)}
+.zc-note{position:absolute;left:50%;top:48px;z-index:5;transform:translate(-50%,-4px);opacity:0;pointer-events:none;
+  display:inline-flex;align-items:center;height:28px;padding:0 13px;border-radius:99px;white-space:nowrap;
+  background:rgba(7,16,11,.7);border:1px solid rgba(255,255,255,.16);
+  font-size:11.5px;font-weight:620;color:#EEF1E8;transition:opacity .25s ease,transform .25s ease}
+.zc-note.show{opacity:1;transform:translate(-50%,0)}
+/* readouts: Elapsed · Sets (real swings) · Tempo of the last swing */
+/* the readouts' box overlaps the window's foot — let taps through to the dial */
+.zs-live{pointer-events:none}
+.zs-live-set.has-tempo{gap:18px}
+.zs-live-set.has-tempo .zs-live-col{min-width:84px}
+.zs-live-set.has-tempo .zs-live-num{font-size:38px}
+.zs-live-set.has-tempo .zs-sets-tot{font-size:19px}
+/* the phone-down line becomes the coach's line after each swing — same type, softly swapped */
+.zs-title.swap{animation:zsCoach .6s cubic-bezier(.2,.75,.2,1) both}
+@keyframes zsCoach{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+
+/* ===== Stand camera — iPad landscape only: the stand's view, beside the phone ===== */
+.stand{display:none}
+#zs.stand-on.show{grid-template-columns:minmax(0,1fr) auto;justify-items:stretch;align-items:center;
+  column-gap:34px;padding:0 44px 0 40px}
+#zs.stand-on .zs{justify-self:end;transform-origin:right center;
+  margin-left:calc(-432px * (1 - var(--pscale,1)))}
+#zs.stand-on .stand{display:block;position:relative;justify-self:stretch;width:100%;max-width:1040px;margin-left:auto;
+  height:calc(912px * var(--pscale,1));border-radius:44px;overflow:hidden;isolation:isolate;color:#EEF1E8;
+  background:radial-gradient(130% 100% at 50% 38%,#0b1913 0%,#050d09 60%,#020504 100%);
+  box-shadow:var(--phone-shadow);animation:stIn .7s cubic-bezier(.2,.75,.2,1) both;--st-foot:176px}
+@keyframes stIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
+.st-video{position:absolute;left:0;right:0;top:0;bottom:var(--st-foot);width:100%;height:calc(100% - var(--st-foot));object-fit:cover;opacity:0;transition:opacity .6s ease}
+.st-video.on{opacity:.88}
+.st-scan{position:absolute;left:0;right:0;top:0;bottom:var(--st-foot);z-index:1;pointer-events:none;
+  background:repeating-linear-gradient(0deg,rgba(255,255,255,.03) 0 1px,transparent 1px 4px)}
+.st-canvas{position:absolute;left:0;right:0;top:0;bottom:var(--st-foot);width:100%;height:calc(100% - var(--st-foot));z-index:2}
+.st-frame{z-index:3;inset:150px 34px calc(var(--st-foot) + 22px)}
+.st-frame i{width:34px;height:34px;border-width:2.5px;border-color:rgba(238,241,232,.6)}
+.stand::before{content:"";position:absolute;inset:0;z-index:3;pointer-events:none;
+  background:linear-gradient(180deg,rgba(2,6,3,.66) 0%,rgba(2,6,3,0) 22%)}
+.st-top{position:absolute;left:34px;right:34px;top:30px;z-index:4;display:flex;align-items:flex-start;justify-content:space-between}
+.st-id{display:flex;flex-direction:column;gap:12px}
+.stand .eyebrow{color:rgba(244,246,239,.5)}
+.st-chip{position:static;transform:none;height:30px;font-size:13px;padding:0 14px 0 12px;align-self:flex-start}
+.st-logo{position:absolute;right:34px;top:30px;z-index:4;width:92px;height:auto;opacity:.92}
+.st-phase{position:absolute;left:34px;top:116px;z-index:4}
+.st-ph{font-size:clamp(44px,5.4vw,68px);font-weight:830;letter-spacing:-.045em;line-height:.95;color:#F4F6EF;text-shadow:0 2px 24px rgba(2,6,3,.6)}
+.st-ph.swap{animation:cueIn .32s cubic-bezier(.2,.8,.25,1) both}
+.st-modeline{display:inline-flex;align-items:center;gap:8px;margin-top:14px;height:30px;padding:0 13px;border-radius:99px;
+  background:rgba(7,16,11,.62);border:1px solid rgba(255,255,255,.18);backdrop-filter:blur(10px);-webkit-backdrop-filter:blur(10px);font-size:13px;font-weight:650;color:#EEF1E8}
+.st-modeline span{color:rgba(244,246,239,.55);font-weight:600}
+.st-note{position:absolute;left:50%;top:46%;z-index:5;transform:translate(-50%,-50%) scale(.96);opacity:0;pointer-events:none;
+  height:40px;display:inline-flex;align-items:center;padding:0 20px;border-radius:99px;white-space:nowrap;
+  background:rgba(7,16,11,.72);border:1px solid rgba(255,255,255,.16);font-size:15px;font-weight:650;color:#EEF1E8;
+  transition:opacity .25s ease,transform .25s ease}
+.st-note.show{opacity:1;transform:translate(-50%,-50%) scale(1)}
+.st-foot{position:absolute;left:0;right:0;bottom:0;height:var(--st-foot);z-index:4;padding:24px 34px 0;
+  background:linear-gradient(180deg,#07110c,#040a07);border-top:1px solid rgba(255,255,255,.08)}
+.st-rail{display:flex;justify-content:space-between;gap:8px}
+.st-rail span{display:flex;align-items:center;gap:7px;font-size:11px;font-weight:650;letter-spacing:.14em;text-transform:uppercase;
+  color:rgba(244,246,239,.36);transition:color .2s}
+.st-rail i{width:6px;height:6px;border-radius:50%;background:rgba(244,246,239,.26);transition:background .2s,box-shadow .2s}
+.st-rail span.on{color:#F4F6EF}
+.st-rail span.on i{background:#C6E74C;box-shadow:0 0 0 4px rgba(198,231,76,.18)}
+.st-read{display:grid;grid-template-columns:repeat(5,1fr);gap:12px;margin-top:20px;padding-top:20px;border-top:1px solid rgba(255,255,255,.12)}
+.st-read b{display:block;font-size:clamp(26px,2.7vw,36px);font-weight:820;letter-spacing:-.03em;line-height:1;color:#F4F6EF;font-variant-numeric:tabular-nums}
+.st-read b small{font-size:.48em;font-weight:640;color:rgba(244,246,239,.45);letter-spacing:0}
+.st-read span{display:block;margin-top:10px;font-size:10.5px;font-weight:620;letter-spacing:.16em;text-transform:uppercase;color:rgba(244,246,239,.45)}
+.st-read div.fresh{animation:rise .5s cubic-bezier(.2,.75,.2,1) both}
+/* the haptic pulse at impact, seen from the stand: one ring of the laser colour */
+.stand::after{content:"";position:absolute;inset:0;z-index:6;border-radius:inherit;pointer-events:none;opacity:0;
+  box-shadow:inset 0 0 0 3px rgba(198,231,76,.85),inset 0 0 60px rgba(198,231,76,.22)}
+.stand.hit::after{animation:stHit .6s ease-out both}
+@keyframes stHit{0%{opacity:1}100%{opacity:0}}
+@media(prefers-reduced-motion:reduce){.zs-title.swap,.st-ph.swap,.st-read div.fresh,#zs.stand-on .stand{animation:none}}
+
+/* ===== Diagnostics (?debug=1, or triple-tap the tracking chip) ===== */
+.zc-inner.is-live .zc-chip,.st-chip{pointer-events:auto;cursor:pointer}
+.zc-debug,.st-debug{position:absolute;z-index:6;margin:0;pointer-events:none;white-space:pre;
+  font:600 9.5px/1.45 ui-monospace,"SF Mono",Menlo,monospace;color:#E4F2BC;letter-spacing:0;
+  background:rgba(2,6,3,.72);border:1px solid rgba(255,255,255,.12);border-radius:10px;padding:7px 9px}
+.zc-debug{left:10px;top:44px;max-width:calc(100% - 20px);overflow:hidden}
+.st-debug{right:34px;top:96px;font-size:12px}
+.zc-log{position:absolute;z-index:6;right:10px;top:10px;height:26px;padding:0 11px;border-radius:99px;pointer-events:auto;
+  background:rgba(198,231,76,.9);color:#0c1210;font-size:11px;font-weight:750}

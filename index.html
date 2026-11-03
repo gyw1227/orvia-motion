@@ -3,8 +3,8 @@
 <head>
   <meta charset="utf-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover, maximum-scale=1" />
-  <meta name="theme-color" content="#0E0F0B" />
-  <title>CALIBR — Posture Coach</title>
+  <meta name="theme-color" content="#F1EEDD" />
+  <title>ARVIA — Posture Coach</title>
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
@@ -30,6 +30,9 @@
     <!-- Screens render here -->
     <main class="screen" id="screen"></main>
 
+    <!-- Fade so scrolled content doesn't collide with the floating tab bar -->
+    <div class="tabbar-scrim" aria-hidden="true"></div>
+
     <!-- Bottom tab bar -->
     <nav class="tabbar" id="tabbar" aria-label="Main"></nav>
   </div>
@@ -40,6 +43,7 @@
   <!-- Onboarding overlay (covers everything on first run) -->
   <div class="overlay" id="onboarding"></div>
 
+  <script src="live.js"></script>
   <script src="app.js"></script>
 </body>
 </html>
