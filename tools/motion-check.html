@@ -1609,7 +1609,12 @@ function loadModel(){
             minPoseDetectionConfidence:.5, minPosePresenceConfidence:.5, minTrackingConfidence:.5
           }).then(l=>{ Live._modelUrl=tries[i][0]; Live._delegate=tries[i][1]; return l; }).catch(e=>{ err=e; return next(i+1); });
       return next(0);
-    })).then(l=>{ landmarker=l; return l; }).catch(e=>{ loadP=null; throw e; });
+    })).then(l=>{
+      // the first GPU inference compiles shaders (~3 s on a laptop) — pay it during the
+      // count-in on a blank frame, so the camera window never freezes when it opens
+      try{ const w=document.createElement('canvas'); w.width=w.height=64; w.getContext('2d').fillRect(0,0,64,64);
+        const t0=performance.now(); l.detectForVideo(w, t0); Live._warmMs=Math.round(performance.now()-t0); }catch(e){}
+      landmarker=l; return l; }).catch(e=>{ loadP=null; throw e; });
   return loadP;
 }
 // a second, still-image instance that only cuts the golfer's silhouette out of the
@@ -2041,7 +2046,7 @@ function paintDebug(r, now){
   const m=r.live, d=r.dbg||{}, last=L.swings[L.swings.length-1];
   const f=(v,n=0)=>v==null||isNaN(v)?'–':(+v).toFixed(n);
   const lines=[
-    `${L.source||'–'} ${L.source==='camera'?(Live._delegate||'')+' ':''}${L.fw}×${L.fh} · ${L.fps} fps`,
+    `${L.source||'–'} ${L.source==='camera'?(Live._delegate||'')+' warm '+(Live._warmMs||0)+'ms ':''}${L.fw}×${L.fh} · ${L.fps} fps`,
     `phase ${r.phase}${r.held?' (held)':''} · vis ${f(d.vis,2)} · torso ${f(d.torso)}px`,
     `hands d/T ${f(r.dNorm,2)} · speed ${f(d.speed,2)}T/s${d.still?' · still':''}`,
     m?`sh ${f(m.shoulder)}° hip ${f(m.hip)}° w ${f(m.weight)}% tilt ${f(m.tilt)}°`:'no address yet',
@@ -2071,12 +2076,13 @@ function mapper(w,h,cover){
   const mirror = L.source==='camera' && L.facing==='user';
   return {s, f:p=>{ const x=ox+p.x*s; return {x:mirror?w-x:x, y:oy+p.y*s}; }};
 }
-const C={ bone:'#D6E8A4', joint:'#E4F2BC', jointFill:'#07100b', laser:'#C6E74C', ink:'#EEF1E8', dim:'rgba(244,246,239,.55)' };
+// skeleton = the system's joint-recognition token (--skel #D0FF00): crisp over a live feed
+const C={ bone:'#D0FF00', joint:'#D0FF00', jointFill:'#07100b', laser:'#C6E74C', ink:'#EEF1E8', dim:'rgba(244,246,239,.55)' };
 
 function drawFigure(g, P, torso, scale){
   // silhouette under the skeleton for the demo golfer, so it reads as a body
   if(L.source==='demo'){
-    g.save(); g.fillStyle=g.strokeStyle='rgba(214,232,164,.10)'; g.lineCap=g.lineJoin='round';
+    g.save(); g.fillStyle=g.strokeStyle='rgba(208,255,0,.08)'; g.lineCap=g.lineJoin='round';
     const lw=Math.max(6,torso*.26); g.lineWidth=lw;
     BONES.forEach(([a,b])=>{ g.beginPath(); g.moveTo(P[a].x,P[a].y); g.lineTo(P[b].x,P[b].y); g.stroke(); });
     g.beginPath(); [11,12,24,23].forEach((i,k)=>k?g.lineTo(P[i].x,P[i].y):g.moveTo(P[i].x,P[i].y)); g.closePath(); g.fill();
@@ -2085,14 +2091,14 @@ function drawFigure(g, P, torso, scale){
   g.save(); g.lineCap='round';
   g.strokeStyle='rgba(2,6,3,.5)'; g.lineWidth=2.6*scale+3;
   BONES.forEach(([a,b])=>{ g.beginPath(); g.moveTo(P[a].x,P[a].y); g.lineTo(P[b].x,P[b].y); g.stroke(); });
-  g.strokeStyle=C.bone; g.globalAlpha=.92; g.lineWidth=2.6*scale;
+  g.strokeStyle=C.bone; g.globalAlpha=.95; g.lineWidth=2.4*scale;
   BONES.forEach(([a,b])=>{ g.beginPath(); g.moveTo(P[a].x,P[a].y); g.lineTo(P[b].x,P[b].y); g.stroke(); });
   const sh=mid(P[11],P[12]);
   g.beginPath(); g.moveTo(sh.x,sh.y); g.lineTo(P[0].x,P[0].y+torso*.1); g.stroke();
   g.beginPath(); g.arc(P[0].x,P[0].y-torso*.03,torso*.15,0,Math.PI*2); g.stroke();
   g.globalAlpha=1;
-  JOINTS.forEach(i=>{ g.beginPath(); g.arc(P[i].x,P[i].y,4.6*scale,0,Math.PI*2);
-    g.fillStyle=C.jointFill; g.fill(); g.lineWidth=2.2*scale; g.strokeStyle=C.joint; g.stroke(); });
+  JOINTS.forEach(i=>{ g.beginPath(); g.arc(P[i].x,P[i].y,4.2*scale,0,Math.PI*2);
+    g.fillStyle=C.jointFill; g.fill(); g.lineWidth=2*scale; g.strokeStyle=C.joint; g.stroke(); });
   g.restore();
 }
 function drawLaser(g, P, torso, scale){
