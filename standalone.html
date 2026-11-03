@@ -513,7 +513,10 @@ img,svg{max-width:100%}
 
 /* ---- Full-screen overlays (onboarding + zero-screen session) -------------*/
 .overlay{position:fixed;inset:0;z-index:100;display:none;background:var(--mesh-bg)}
-.overlay.show{display:grid;place-items:center;place-content:center}
+.overlay.show{display:grid;place-items:center}
+/* the scaled device is taller than short viewports — centre the track, not just the item
+   (desktop/tablet only: on a phone the overlay content is the full-width screen itself) */
+@media(min-width:480px){.overlay.show{place-content:center}}
 .ob-inner{position:relative;width:100%;max-width:432px;height:100dvh;max-height:936px;margin:0 auto;
   display:flex;flex-direction:column;overflow:hidden;background:#fff}
 .ob-top{flex:0 0 auto;padding:8px 26px 0;display:flex;align-items:center;justify-content:space-between}
