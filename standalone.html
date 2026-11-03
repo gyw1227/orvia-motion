@@ -1637,7 +1637,7 @@ const demoCv=document.createElement('canvas'); demoCv.width=DW; demoCv.height=DH
 function begin(cfg){
   end(false);
   L=S0();
-  L.on=true; L.mode=modeOf(cfg.mode); L.sets=cfg.sets||10; L.first=!!cfg.first; L.mission=cfg.mission||null;
+  L.on=true; L.mode=modeOf(cfg.mode); L.sets=cfg.sets||10; L.first=!!cfg.first; L.mission=cfg.mission||null; L.forceDemo=!!cfg.demo;
   L.engine=createEngine(L.mode, L.handed);
   L.t0=performance.now();
   L.log={ app:'orvia-live', v:1, started:new Date().toISOString(), ua:navigator.userAgent,
@@ -1675,7 +1675,8 @@ function attachCam(){
 function startSource(){
   const wantCam = !!(navigator.mediaDevices && navigator.mediaDevices.getUserMedia) && window.isSecureContext;
   setChip('Starting camera');
-  if(!wantCam){ startDemo('No camera here'); return; }
+  if(L.forceDemo){ startDemo('Demo'); return; }
+  if(!wantCam){ startDemo(window.isSecureContext?'No camera on this device':'Camera needs an https address'); return; }
   navigator.mediaDevices.getUserMedia({audio:false, video:{facingMode:L.facing, width:{ideal:1280}, height:{ideal:720}, frameRate:{ideal:60,max:60}}})
     .then(s=>{
       if(!L.on){ s.getTracks().forEach(t=>t.stop()); return; }
@@ -1696,17 +1697,17 @@ function startSource(){
     .catch(e=>{
       if(L.stream){ L.stream.getTracks().forEach(t=>t.stop()); L.stream=null; }
       const n=e&&e.name;
-      startDemo(n==='NotAllowedError'||n==='SecurityError' ? 'Camera blocked' : n==='NotFoundError' ? 'No camera found' : 'Tracker offline');
+      startDemo(n==='NotAllowedError'||n==='SecurityError' ? 'Camera blocked here — allow it, or open the https site' : n==='NotFoundError' ? 'No camera found' : 'Tracker offline — check the connection');
     });
 }
 function startDemo(reason){
   if(!L.on) return;
-  L.source='demo'; L.fw=DW; L.fh=DH; L.demo={start:performance.now(), i:0};
+  L.source='demo'; L.fw=DW; L.fh=DH; L.demo={start:performance.now(), i:0}; L.demoReason=reason;
   if(L.log){ L.log.source='demo:'+reason; L.log.video=[DW,DH]; }
   if(L.cam) L.cam.win.classList.add('is-demo');
   if(L.stand) L.stand.el.classList.add('is-demo');
   setChip('Demo golfer');
-  note(`${reason} — a demo golfer is swinging`, 3600);
+  if(reason!=='Demo') note(`${reason}`, 4200);
   L.raf=requestAnimationFrame(loopDemo);
 }
 
@@ -1774,7 +1775,8 @@ function phaseName(ph){
 let _hint='';
 function hintFor(ph, lm){
   if(!L.cam || !L.cam.hint) return;
-  const h = !lm||ph==='idle' ? 'Keep your whole body inside the frame'
+  const h = L.source==='demo' ? (L.demoReason==='Demo'?'Demo golfer — no camera in use':L.demoReason+' · demo golfer')
+          : !lm||ph==='idle' ? 'Keep your whole body inside the frame'
           : ph==='ready' ? 'Hold your address for a beat — the laser locks on'
           : ph==='address' ? 'Swing when you’re ready'
           : '';
