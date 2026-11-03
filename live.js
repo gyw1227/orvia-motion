@@ -428,30 +428,58 @@ function primeVoice(){
 /* ============================================================== COACH COPY
    One short line per swing, in the app's own voice. The same line is spoken
    and shown in the session title, so a glance and an ear get the same cue. */
+/* One short line per swing, never the same twice running. It reads the swing's
+   speed (peak hand speed, against the swing before) and its posture (the worst
+   check, or the best one when everything held), and says one thing. */
+let _lastLines=[];
+const pickLine=(arr,seed)=>{ const free=arr.filter(t=>!_lastLines.includes(t)); const pool=free.length?free:arr; return pool[seed%pool.length]; };
 function coachLine(rep){
-  const c=rep.checks, L=rep.handed==='R'?'left':'right', R=rep.handed==='R'?'right':'left';
-  const order = rep.type==='putt' ? ['head','sway','tempo','wrist','rock']
-    : ['tempo','head','wImp','shoulder','leadArm','wFin','hip','tilt','wTop'];
+  const c=rep.checks, P=rep.type==='putt', Ls=rep.handed==='R'?'left':'right', Rs=rep.handed==='R'?'right':'left';
+  const prev=L.swings.length?L.swings[L.swings.length-1]:null;
+  const v=rep.peakSpeed||0, dv=prev&&prev.type===rep.type?v-(prev.peakSpeed||0):0;
+  const seed=(rep.n||0)*7+Math.round(v*10);
+  const order = P ? ['head','sway','tempo','wrist','rock'] : ['tempo','head','wImp','shoulder','leadArm','wFin','hip','tilt','wTop'];
   let pick=null;
   for(const lvl of ['bad','warn']){ for(const k of order){ if(c[k] && c[k].st===lvl){ pick=k; break; } } if(pick) break; }
-  if(!pick) return { key:'good', level:'good',
-    text: rep.type==='putt' ? 'Smooth stroke. Same pace again.' : `That’s the one. ${rep.tempo.ratio.toFixed(1)} to 1 — same rhythm again.` };
-  const lo=c[pick].v<c[pick].r[0];
-  const T={
-    tempo: lo?'Slower back. Let the top breathe.':'Don’t hang at the top — swing straight through.',
-    head: rep.type==='putt'?'Keep your head still until the putt is gone.':'Keep your head still through the ball.',
-    sway:'Quiet the knees. Rock from the shoulders.',
-    rock: lo?'A longer stroke — rock the shoulders more.':'Shorter back. Match the stroke to the distance.',
-    wrist:'Keep the wrists out of it — arms and putter as one.',
-    shoulder: lo?`Turn your ${L} shoulder under your chin.`:'Stop the backswing a touch shorter.',
-    hip: lo?'Let the hips turn with you.':`Brace the ${R} knee — the hips over-turned.`,
-    leadArm:`Keep the ${L} arm long at the top.`,
-    wTop: lo?`You slid ${R}. Turn in place.`:`Load your ${R} side on the way back.`,
-    wImp:`Drive onto your ${L} side through impact.`,
-    tilt: lo?'Stay behind the ball at impact.':'You’re hanging back — stack over the ball.',
-    wFin:`Hold the finish on your ${L} foot.`,
+  const lo=pick && c[pick].v<c[pick].r[0], ratio=rep.tempo.ratio.toFixed(1);
+  const V={
+    good: P ? ['Smooth stroke. Same pace again.','That one rolled true — repeat it.','Quiet head, even pace. Again.']
+            : [`That’s the one — ${ratio} to 1.`,'Clean from address to finish.','Balanced, full, on time. Again.','Good swing. Copy that rhythm.',`Smooth — ${v.toFixed(1)} m/s and in control.`],
+    tempo: lo ? ['Slower back. Let the top breathe.','Take the club back slower.',`Quick back — ${ratio} to 1. Ease it.`]
+              : ['Don’t hang at the top — go.','Swing through without the pause.',`${ratio} to 1 — start down sooner.`],
+    head: P ? ['Head still until the putt is gone.','Eyes down — keep the head quiet.'] : ['Keep your head still through the ball.','Head drifted — stay centred.','Quiet head. Let the body turn under it.'],
+    sway: ['Quiet the knees. Rock from the shoulders.','Less body — let the shoulders rock.'],
+    rock: lo ? ['A longer stroke — rock the shoulders more.','Bigger shoulder rock.'] : ['Shorter back. Match it to the distance.','Trim the backstroke.'],
+    wrist: ['Wrists out of it — arms and putter as one.','No flick. Hold the wrist angle.'],
+    shoulder: lo ? [`Turn your ${Ls} shoulder under your chin.`,'A fuller turn — the shoulders stopped short.','Turn more. Back to the target.'] : ['Stop the backswing a touch shorter.','Shorter turn — stay in control.'],
+    hip: lo ? ['Let the hips turn with you.','Free the hips on the way back.'] : [`Brace the ${Rs} knee — the hips over-turned.`,'Less hip turn. Resist with the knee.'],
+    leadArm: [`Keep the ${Ls} arm long at the top.`,`Wide arc — straighter ${Ls} arm.`],
+    wTop: lo ? [`You slid ${Rs}. Turn in place.`,'Turn, don’t sway.'] : [`Load your ${Rs} side on the way back.`,`Feel the weight into your ${Rs} heel.`],
+    wImp: [`Drive onto your ${Ls} side through impact.`,'Weight stayed back — shift forward.',`Get to your ${Ls} foot at impact.`],
+    tilt: lo ? ['Stay behind the ball at impact.','Upper body raced ahead — stay back.'] : ['Hanging back — stack over the ball.','Chest over the ball at impact.'],
+    wFin: [`Hold the finish on your ${Ls} foot.`,'Finish tall, weight forward.'],
   };
-  return { key:pick, level:c[pick].st, text:T[pick] };
+  let text=pickLine(V[pick||'good'], seed);
+  // speed, said only when it moved — one clause, before the posture note
+  if(!P && prev && Math.abs(dv)>=0.6) text = `${dv>0?'Faster':'Slower'} hands (${dv>0?'+':'−'}${Math.abs(dv).toFixed(1)} m/s). ` + text;
+  _lastLines=[..._lastLines.slice(-2), text.replace(/^.*?m\/s\)\. /,'')];
+  return { key:pick||'good', level:pick?c[pick].st:'good', text };
+}
+// the read under the headline: speed and tempo, then the one posture point — two short sentences
+function swingDetail(rep, prev){
+  const c=rep.checks, P=rep.type==='putt';
+  const v=rep.peakSpeed||0, dv=prev?v-(prev.peakSpeed||0):null;
+  const sp = P ? `Stroke ${rep.tempo.ratio.toFixed(1)}:1, ${Math.round(rep.strokeCm||0)} cm back.`
+               : `Hands ${v.toFixed(1)} m/s${dv==null?'':Math.abs(dv)<0.2?', same as last':`, ${dv>0?'+':'−'}${Math.abs(dv).toFixed(1)} vs last`} · tempo ${rep.tempo.ratio.toFixed(1)}:1.`;
+  const NM={tempo:'tempo',shoulder:'shoulder turn',hip:'hip turn',leadArm:'lead arm',head:'head',wTop:'weight at the top',wImp:'weight at impact',tilt:'spine tilt',wFin:'finish',sway:'sway',rock:'shoulder rock',wrist:'wrists'};
+  const rank={bad:0,warn:1,good:2}, ks=Object.keys(c).filter(k=>k!=='tempo');
+  const all=Object.keys(c), worst=all.slice().sort((a,b)=>rank[c[a].st]-rank[c[b].st]||(a==='tempo'?1:-1))[0], best=ks.find(k=>c[k].st==='good');
+  const fmt=(k)=>{ const x=c[k].v; return k==='tempo'?`${x.toFixed(1)}:1`:k==='head'||k==='sway'?`${x.toFixed(1)} cm`:/^w/.test(k)&&k!=='wrist'?`${Math.round(x)}%`:`${Math.round(x)}°`; };
+  const po = !worst ? '' : c[worst].st==='good'
+    ? `Every checkpoint held — ${NM[best]} ${fmt(best)}.`
+    : worst==='tempo' ? `Posture held${best?` — ${NM[best]} ${fmt(best)}`:''}; the rhythm is the one to fix.`
+    : `${NM[best]?NM[best][0].toUpperCase()+NM[best].slice(1)+' was fine; ':''}${NM[worst]} ${fmt(worst)} is the one to fix.`;
+  return (sp+' '+po).trim();
 }
 
 /* =========================================================== MODEL + CAMERA */
@@ -1352,8 +1380,8 @@ function buildRecord(only, opts){
 
   const phases=[['address','Address'],['takeaway','Takeaway'],['top','Top'],['downswing','Downswing'],['impact','Impact'],['finish','Finish']]
     .map(([k,l])=>({k:l, warn: hs.some(h=>h.st[k]==='alert')}));
+  // the avatar is the hand-made dot artwork (dot-1…7) — the live read changes the words and the flags, not the figure
   const frames={}, dots={}, hsPts={};
-  Object.entries(last.frames||{}).forEach(([k,f])=>{ if(f&&f.url){ frames[k]=f.url; dots[k]=f.dots; hsPts[k]=f.hs; } });
 
   return {
     type:'swing', live:true, demo:L.source==='demo',
@@ -1371,7 +1399,7 @@ function buildRecord(only, opts){
 function swingRecord(rep){
   const i=L.swings.indexOf(rep), hist=L.swings.slice(0, i<0?L.swings.length:i+1).filter(s=>s.type!=='putt');
   const r=buildRecord([rep], {history:hist, n:rep.n});
-  r.finding=r.finding.replace(' session from address',' swing from address').replace('A starting point:','This swing:');
+  r.finding=swingDetail(rep, hist.length>1?hist[hist.length-2]:null);
   r.score=rep.score; r.coach=rep.coach; r.n=rep.n; r.sets=L.sets; r.first=hist.length<2;
   return r;
 }
