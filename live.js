@@ -876,15 +876,9 @@ function dotsFor(lm){
 function capsuleMask(lm, torso){
   const m=document.createElement('canvas'); m.width=CW; m.height=CH;
   const g=m.getContext('2d'), s=CW/FW;
-  g.scale(s,s); g.fillStyle=g.strokeStyle='#000'; g.lineCap=g.lineJoin='round';
-  const lw=Math.max(6,torso*(L.source==='demo'?.15:.22)); g.lineWidth=lw;
-  BONES.forEach(([a,b])=>{ g.beginPath(); g.moveTo(lm[a].x,lm[a].y); g.lineTo(lm[b].x,lm[b].y); g.stroke(); });
-  // torso: shoulders pulled 12% in toward the spine so the chest reads as a body, not a box
-  const sc=mid(lm[11],lm[12]), hc=mid(lm[23],lm[24]), inT=(p,c,k)=>({x:c.x+(p.x-c.x)*k, y:c.y+(p.y-c.y)*k});
-  const tq=[inT(lm[11],sc,.88), inT(lm[12],sc,.88), inT(lm[24],hc,.94), inT(lm[23],hc,.94)];
-  g.beginPath(); tq.forEach((p,k)=>k?g.lineTo(p.x,p.y):g.moveTo(p.x,p.y)); g.closePath(); g.fill(); g.lineWidth=lw*.7; g.stroke();
-  const sh=mid(lm[11],lm[12]); g.lineWidth=lw*.85; g.beginPath(); g.moveTo(sh.x,sh.y); g.lineTo(lm[0].x,lm[0].y); g.stroke();
-  g.beginPath(); g.arc(lm[0].x, lm[0].y-torso*.05, torso*.185, 0, Math.PI*2); g.fill();
+  g.scale(s,s); g.fillStyle='#000';
+  // a real camera frame is only masked like this until the segmenter's cut-out lands — keep it close to the body
+  drawBody(g, lm, torso*(L.source==='demo'?1:1.04), ()=>{});
   return g.getImageData(0,0,CW,CH).data;   // alpha channel = coverage
 }
 function halftone(srcCv, maskData, maskIsFloat){
@@ -1024,11 +1018,7 @@ const C={ bone:'#D0FF00', joint:'#D0FF00', jointFill:'#07100b', laser:'#C6E74C',
 function drawFigure(g, P, torso, scale){
   // silhouette under the skeleton for the demo golfer, so it reads as a body
   if(L.source==='demo'){
-    g.save(); g.fillStyle=g.strokeStyle='rgba(208,255,0,.08)'; g.lineCap=g.lineJoin='round';
-    const lw=Math.max(5,torso*.19); g.lineWidth=lw;
-    BONES.forEach(([a,b])=>{ g.beginPath(); g.moveTo(P[a].x,P[a].y); g.lineTo(P[b].x,P[b].y); g.stroke(); });
-    g.beginPath(); [11,12,24,23].forEach((i,k)=>k?g.lineTo(P[i].x,P[i].y):g.moveTo(P[i].x,P[i].y)); g.closePath(); g.fill();
-    g.beginPath(); g.arc(P[0].x,P[0].y-torso*.04,torso*.18,0,Math.PI*2); g.fill(); g.restore();
+    g.save(); drawBody(g, P, torso, k=>{ g.fillStyle = k==='arm' ? 'rgba(208,255,0,.07)' : 'rgba(208,255,0,.09)'; }); g.restore();
   }
   const seen=i=>!(P[i].v<0.35), bones=BONES.filter(([a,b])=>seen(a)&&seen(b));
   g.save(); g.lineCap='round';
@@ -1081,15 +1071,79 @@ function drawCam(lm){
   const M=mapper(c.w,c.h,true), P=lm.map(M.f), torso=torsoOf(P);
   drawLaser(c.g,P,torso,1); drawTrail(c.g,M,1); drawFigure(c.g,P,torso,1); drawFlashes(c.g,M,torso,1);
 }
+
+/* A human silhouette from the joints — head, neck, trapezius slope, rounded
+   shoulders, chest tapering to the waist, hips, and limbs that thin from thigh to
+   shin and upper arm to forearm. Shared by the demo source, the dot-frame mask and
+   the demo figure in the camera window, so every view reads as the same body.
+   paint(kind) sets the fill per part: 'torso' | 'limb' | 'head'. */
+function drawBody(g, P, T, paint){
+  const S=mid(P[11],P[12]), H=mid(P[23],P[24]);
+  let ux=H.x-S.x, uy=H.y-S.y; const ul=Math.hypot(ux,uy)||1; ux/=ul; uy/=ul;       // spine, pointing down
+  const nx=-uy, ny=ux;                                                            // across the body
+  const at=(p,a,b)=>({x:p.x+ux*a+nx*b, y:p.y+uy*a+ny*b});
+  const toward=(p,c,k)=>({x:c.x+(p.x-c.x)*k, y:c.y+(p.y-c.y)*k});
+  const side=(sh,hp,sgn)=>{
+    const out=toward(sh,S,1.04), del=at(out,T*.03,0);                      // shoulder cap, a touch outside the joint
+    const pit=at(toward(sh,S,.86),T*.24,0);                                 // armpit
+    const waist=toward({x:sh.x+(hp.x-sh.x)*.66, y:sh.y+(hp.y-sh.y)*.66}, {x:S.x+(H.x-S.x)*.66, y:S.y+(H.y-S.y)*.66}, .80);
+    const hip=at(toward(hp,H,1.32),T*.04,0);                                // flesh beyond the hip joint
+    return {out, del, pit, waist, hip};
+  };
+  // a turned body still has depth: the chest never gets thinner than it is front-to-back
+  // each side stays on its own side (past 90° of turn the shoulder joints swap over in a face-on picture)
+  const hs=Math.sign((P[23].x-P[24].x)*nx+(P[23].y-P[24].y)*ny)||1;
+  const widen=(p,c,s,min)=>{ const bx=p.x-c.x, by=p.y-c.y, w=Math.max(Math.abs(bx*nx+by*ny),min), a=bx*ux+by*uy;
+    return {x:c.x+nx*s*w+ux*a, y:c.y+ny*s*w+uy*a}; };
+  const lSh=widen(P[11],S,hs,T*.21), rSh=widen(P[12],S,-hs,T*.21), lHp=widen(P[23],H,hs,T*.17), rHp=widen(P[24],H,-hs,T*.17);
+  const L=side(lSh,lHp,1), R=side(rSh,rHp,-1);
+  const neckW=T*.085, nb=at(S,-T*.05,0), dirLR=Math.sign((lSh.x-rSh.x)*nx+(lSh.y-rSh.y)*ny)||1;
+  const nkL=at(nb,0,neckW*dirLR), nkR=at(nb,0,-neckW*dirLR);
+  const crotch=at(H,T*.16,0);
+  // limbs: thick near the body, thinner toward hands and feet
+  const limb=(a,b,w0,w1)=>{ const dx=b.x-a.x, dy=b.y-a.y, d=Math.hypot(dx,dy)||1, px=-dy/d, py=dx/d;
+    g.beginPath(); g.moveTo(a.x+px*w0/2,a.y+py*w0/2); g.lineTo(b.x+px*w1/2,b.y+py*w1/2);
+    g.lineTo(b.x-px*w1/2,b.y-py*w1/2); g.lineTo(a.x-px*w0/2,a.y-py*w0/2); g.closePath(); g.fill();
+    g.beginPath(); g.arc(a.x,a.y,w0/2,0,Math.PI*2); g.fill();
+    g.beginPath(); g.arc(b.x,b.y,w1/2,0,Math.PI*2); g.fill(); };
+  paint('limb');
+  limb(P[23],P[25],T*.25,T*.17); limb(P[24],P[26],T*.25,T*.17);                  // thighs
+  limb(P[25],P[27],T*.16,T*.10); limb(P[26],P[28],T*.16,T*.10);                  // shins
+  limb(P[27],P[31],T*.10,T*.07); limb(P[28],P[32],T*.10,T*.07);                  // feet
+  paint('torso');
+  g.beginPath();
+  g.moveTo(nkL.x,nkL.y);
+  g.quadraticCurveTo(L.out.x+(nkL.x-L.out.x)*.35-ux*T*.035, L.out.y+(nkL.y-L.out.y)*.35-uy*T*.035, L.out.x, L.out.y);   // trapezius
+  g.quadraticCurveTo(L.del.x+nx*dirLR*T*.03, L.del.y+ny*dirLR*T*.03, L.pit.x, L.pit.y);                                 // deltoid
+  g.quadraticCurveTo(L.waist.x+(L.pit.x-L.waist.x)*.15, L.waist.y+(L.pit.y-L.waist.y)*.15, L.waist.x, L.waist.y);       // ribcage to waist
+  g.quadraticCurveTo(L.hip.x, L.hip.y-uy*T*.10, L.hip.x, L.hip.y);
+  g.quadraticCurveTo(crotch.x+(L.hip.x-crotch.x)*.5+ux*T*.06, crotch.y+(L.hip.y-crotch.y)*.5+uy*T*.06, crotch.x, crotch.y);
+  g.quadraticCurveTo(crotch.x+(R.hip.x-crotch.x)*.5+ux*T*.06, crotch.y+(R.hip.y-crotch.y)*.5+uy*T*.06, R.hip.x, R.hip.y);
+  g.quadraticCurveTo(R.hip.x, R.hip.y-uy*T*.10, R.waist.x, R.waist.y);
+  g.quadraticCurveTo(R.waist.x+(R.pit.x-R.waist.x)*.15, R.waist.y+(R.pit.y-R.waist.y)*.15, R.pit.x, R.pit.y);
+  g.quadraticCurveTo(R.del.x-nx*dirLR*T*.03, R.del.y-ny*dirLR*T*.03, R.out.x, R.out.y);
+  g.quadraticCurveTo(R.out.x+(nkR.x-R.out.x)*.35-ux*T*.035, R.out.y+(nkR.y-R.out.y)*.35-uy*T*.035, nkR.x, nkR.y);
+  g.closePath(); g.fill();
+  // neck and head — an upright oval, a little forward of the shoulders
+  paint('head');
+  const hc=at(P[0],-T*.07,0), hb=at(hc,T*.17,0);
+  limb(nb,hb,neckW*2.1,neckW*1.9);
+  g.beginPath(); g.ellipse(hc.x,hc.y,T*.15,T*.195,Math.atan2(uy,ux)-Math.PI/2,0,Math.PI*2); g.fill();
+  // arms last, over the chest — face-on the hands hang in front of the body
+  paint('arm');
+  limb(P[11],P[13],T*.15,T*.12); limb(P[12],P[14],T*.15,T*.12);                  // upper arms
+  limb(P[13],P[15],T*.12,T*.085); limb(P[14],P[16],T*.12,T*.085);                // forearms
+  const hand=mid(P[15],P[16]); g.beginPath(); g.arc(hand.x,hand.y,T*.075,0,Math.PI*2); g.fill();
+}
 function paintDemoSource(lm){
   // what the phase frames are cut from in demo mode: a soft-shaded figure on clear
   const g=demoCv.getContext('2d'); g.clearRect(0,0,DW,DH);
   const T=torsoOf(lm), grd=g.createLinearGradient(0,150,0,680);
   grd.addColorStop(0,'#3A4036'); grd.addColorStop(.45,'#8C9284'); grd.addColorStop(1,'#3A4036');
-  g.fillStyle=g.strokeStyle=grd; g.lineCap=g.lineJoin='round'; g.lineWidth=T*.15;
-  BONES.forEach(([a,b])=>{ g.beginPath(); g.moveTo(lm[a].x,lm[a].y); g.lineTo(lm[b].x,lm[b].y); g.stroke(); });
-  g.beginPath(); [11,12,24,23].forEach((i,k)=>k?g.lineTo(lm[i].x,lm[i].y):g.moveTo(lm[i].x,lm[i].y)); g.closePath(); g.fill();
-  g.beginPath(); g.arc(lm[0].x,lm[0].y-T*.05,T*.21,0,Math.PI*2); g.fill();
+  const arm=g.createLinearGradient(0,150,0,680);
+  arm.addColorStop(0,'#2E332B'); arm.addColorStop(.5,'#6E7466'); arm.addColorStop(1,'#2E332B');
+  g.lineJoin='round';
+  drawBody(g, lm, T, k=>{ g.fillStyle = k==='arm' ? arm : grd; });
 }
 
 /* ================================================================ STAND VIEW
