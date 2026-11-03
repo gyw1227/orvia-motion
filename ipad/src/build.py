@@ -4,6 +4,10 @@ css=open(A+'styles.css').read()
 for f,m in [('mission-bg2.jpg','image/jpeg'),('cover-golf.jpg','image/jpeg')]:
     css=css.replace('url(%s)'%f,'url(data:%s;base64,%s)'%(m,base64.b64encode(open(A+f,'rb').read()).decode()))
 live=open(A+'live.js').read()
+appjs=open(A+'app.js').read()
+for f,m in [('사람 형태1-small.png','image/png'),('dot-1-address.webp','image/webp'),('dot-2-takeaway.webp','image/webp'),('dot-3-top.webp','image/webp'),
+            ('dot-4-downswing.webp','image/webp'),('dot-5-impact.webp','image/webp'),('dot-6-finish.webp','image/webp'),('dot-7-through.webp','image/webp')]:
+    appjs=appjs.replace(f,'data:%s;base64,%s'%(m,base64.b64encode(open(A+f,'rb').read()).decode()))
 live=live.replace("'logo-orvia-word.webp'","'data:image/webp;base64,%s'"%base64.b64encode(open(A+'logo-orvia-word.webp','rb').read()).decode())
 pre="try{ if(!/[?&]debug=1/.test(location.search)) localStorage.setItem('orviaDebug','0'); }catch(e){}"
 body=open(P+'body.html').read(); ic=open(P+'ipad.css').read(); ij=open(P+'ipad.js').read()
@@ -18,6 +22,8 @@ html=f'''<!doctype html>
 {body}
 <script>{pre}</script>
 <script>{live}</script>
+<script>window.ORVIA_EMBED=true;</script>
+<script>{appjs}</script>
 <script>{ij}</script>
 </body></html>'''
 open('/mnt/user-data/outputs/orvia-ipad-motion.html','w').write(html)

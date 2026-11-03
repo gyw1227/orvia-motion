@@ -1122,6 +1122,23 @@ svg.mk-layer{position:absolute;inset:0;width:100%;height:100%;overflow:visible;t
 .zsw-row span{color:rgba(244,246,239,.72);font-weight:560}
 .zsw-row b{font-weight:760;font-variant-numeric:tabular-nums}
 
+/* ===== Swing read — the report's anatomy for one swing, over the camera ===== */
+/* same modal as the past-day record; on the session screen it sits closer to the edges */
+.zs .record-overlay.sf.show{padding:48px 12px 18px}
+.sf-card{max-width:408px;color:var(--ink)}
+.sf .record-head{gap:12px;align-items:center;padding:16px 18px 10px}
+.sf-titles{min-width:0}
+.sf-coach{margin-top:3px;font-size:17px;line-height:1.3;letter-spacing:-.015em}
+.sf-score{flex:0 0 auto;width:58px;height:58px;border-radius:50%;display:grid;place-content:center;text-align:center;
+  background:var(--lime);color:var(--lime-ink);box-shadow:inset 0 0 0 1px rgba(255,255,255,.14)}
+.sf-score b{font-size:21px;font-weight:820;letter-spacing:-.03em;line-height:1;font-variant-numeric:tabular-nums}
+.sf-score span{font-size:8.5px;font-weight:700;letter-spacing:.14em;text-transform:uppercase;opacity:.72;margin-top:2px}
+.sf-score.warn{background:#EFE6C4;color:#5B4A12}
+.sf-score.alert{background:#F4DDD3;color:#8A3A1E}
+.sf-foot{flex:0 0 auto;padding:10px 18px 16px;border-top:1px solid var(--stroke);background:rgba(255,255,255,.6)}
+.sf-foot .btn{height:52px;font-size:15px}
+.sf-hint{margin-top:8px}
+
 </style>
 </head>
 <body>
@@ -1807,6 +1824,9 @@ function loopDemo(){
   if(!L.on || L.source!=='demo') return;
   L.raf=requestAnimationFrame(loopDemo);
   const now=performance.now(), type=MODES[L.mode].type;
+  // held while a swing read is open — the demo golfer waits, like a person reading would
+  if(L.hold && L.lastDemoNow) L.demo.start+=now-L.lastDemoNow;
+  L.lastDemoNow=now;
   let tl=demoTimeline(type, VARIANTS[L.demo.i%VARIANTS.length]), t=(now-L.demo.start)/1000;
   if(t>tl.total){ L.demo.i++; L.demo.start=now; t=0; }
   const lm=demoPose(t, type, L.demo.i, L.handed);
@@ -1877,7 +1897,7 @@ function note(text, ms){
 function onEvent(e, lm){
   if(L.log && e.type!=='swing') L.log.events.push([Math.round(e.t-L.t0), e.type, e.phase||'']);
   if(e.type==='phase'){
-    if(e.phase==='address'){ if(L.swings.length<L.sets) hideSwingCard(); L.trail=[]; L.curFrames={}; SND.lock(); if(!L._saidLaser){ L._saidLaser=true; say('Laser on. Swing when ready.'); } }
+    if(e.phase==='address'){ emit('orvia:address', {n:L.swings.length, demo:L.source==='demo'}); if(L.swings.length<L.sets) hideSwingCard(); L.trail=[]; L.curFrames={}; SND.lock(); if(!L._saidLaser){ L._saidLaser=true; say('Laser on. Swing when ready.'); } }
     if(e.phase==='downswing') SND.whoosh(MODES[L.mode].type==='putt'?.25:.32);
     if(L.stand) L.stand.setPhase(e.phase);
   } else if(e.type==='capture'){
@@ -1903,7 +1923,8 @@ function onSwing(rep){
   const tEl=document.getElementById('zsTempo');
   if(tEl) tEl.innerHTML=`${rep.tempo.ratio.toFixed(1)}<span class="zs-sets-tot">:1</span>`;
   setTitle(rep.coach.text);
-  swingCard(rep, n);
+  if(!window.ORVIA_SWING_SHEET || rep.type==='putt') swingCard(rep, n);
+  emit('orvia:swing', {rep, n, sets:L.sets, done:n>=L.sets});
   if(L.stand) L.stand.swing(rep);
   const done = n===L.sets;
   setTimeout(()=>say(done ? `${rep.coach.text} That’s the set — end the session for your report.` : rep.coach.text), 450);
@@ -2361,10 +2382,12 @@ function drawStand(lm, r){
    from the swings that were actually tracked — plus the frames, joint dots and
    coached-joint points so the avatar, strip and close-ups show this golfer. */
 function avg(a){ return a.reduce((s,v)=>s+v,0)/(a.length||1); }
-function buildRecord(){
-  const sw=L.swings.filter(s=>s.type!=='putt'), pt=L.swings.filter(s=>s.type==='putt');
-  if(pt.length>sw.length) return { type:'putt', putt:puttRecord(pt) };
-  const list=sw.length?sw:L.swings;
+function buildRecord(only, opts){
+  opts=opts||{};
+  const pool=only||L.swings;
+  const sw=pool.filter(s=>s.type!=='putt'), pt=pool.filter(s=>s.type==='putt');
+  if(!only && pt.length>sw.length) return { type:'putt', putt:puttRecord(pt) };
+  const list=sw.length?sw:pool;
   const last=list[list.length-1];
   const mode=MODES[last.mode], R=last.handed==='R';
   const ph=last.ph, tg=mode.t;
@@ -2416,7 +2439,15 @@ function buildRecord(){
   const head=Math.round(clamp(100-headCm*2,40,100)), weight=Math.round(avg(list.map(s=>s.ph.impact.weight)));
   const rels=list.map(s=>relOf(s.releaseMs));
   const relMode=['On time','Early','Late'].map(k=>[k,rels.filter(r=>r===k).length]).sort((a,b)=>b[1]-a[1])[0][0];
-  const D=(typeof DATA!=='undefined'&&DATA.report)||null, prev=k=>D?(D.metrics.find(m=>m.k===k)||{}):{};
+  // compare against: the swing before this one (per-swing read), or the last session (session report)
+  const headOf=s=>Math.round(clamp(100-s.headMax*2,40,100));
+  const SWV={ 'Tempo':s=>+s.tempo.ratio.toFixed(1), 'Head Steadiness':headOf, 'Weight Transfer':s=>Math.round(s.ph.impact.weight) };
+  let D=(typeof DATA!=='undefined'&&DATA.report)||null;
+  if(opts.history){
+    const hist=opts.history, before=hist.slice(0,-1), pr=before[before.length-1];
+    D = pr ? { metrics:Object.keys(SWV).map(k=>({k, v:''+SWV[k](pr), spark:hist.slice(-5,-1).map(SWV[k])})) } : null;
+  }
+  const prev=k=>D?(D.metrics.find(m=>m.k===k)||{}):{};
   const pv=k=>parseFloat(prev(k).v);
   const sp=(k,v)=>{ const s=(prev(k).spark||[]).slice(-4); return s.length?[...s,v]:[v,v]; };
   const dirOf=(v,p,better)=>{ if(isNaN(p)) return 'flat';
@@ -2448,7 +2479,7 @@ function buildRecord(){
 
   return {
     type:'swing', live:true, demo:L.source==='demo',
-    label:`Tonight · ${list.length} swing${list.length>1?'s':''}`,
+    label: opts.history ? `Swing ${opts.n||list.length}` : `Tonight · ${list.length} swing${list.length>1?'s':''}`,
     hotspots:hs, finding:findingFor(list,last,{shSt,tiltSt,wImpSt,wFinSt,relSt,tempo,head,weight}),
     phases, metrics, success, streak:(D&&D.streak)||1,
     improved: metrics.filter(m=>m.dir==='up').length, total:4,
@@ -2457,6 +2488,16 @@ function buildRecord(){
     note:'Tracked live from the stand.'
   };
 }
+/* one swing, read on its own — the report's avatar, phases and metrics for this swing,
+   compared with the swing before it in the session */
+function swingRecord(rep){
+  const i=L.swings.indexOf(rep), hist=L.swings.slice(0, i<0?L.swings.length:i+1).filter(s=>s.type!=='putt');
+  const r=buildRecord([rep], {history:hist, n:rep.n});
+  r.finding=r.finding.replace(' session from address',' swing from address').replace('A starting point:','This swing:');
+  r.score=rep.score; r.coach=rep.coach; r.n=rep.n; r.sets=L.sets; r.first=hist.length<2;
+  return r;
+}
+function emit(name, detail){ try{ window.dispatchEvent(new CustomEvent(name,{detail})); }catch(e){} }
 function findingFor(list,last,s){
   const n=list.length, mode=last.mode.toLowerCase();
   const good=[], bad=[];
@@ -2495,6 +2536,7 @@ const Live = {
   get swings(){ return L.swings; },
   set mission(m){ L.mission=m; }, get mission(){ return L.mission; },
   set voice(v){ voiceOn=!!v; }, get voice(){ return voiceOn; },
+  hold(on){ L.hold=!!on; }, swingRecord, sessionRecord:()=>L.swings.length?buildRecord():null,
   // exposed for automated checks
   _engine: createEngine, _demoPose: demoPose, _demoTimeline: demoTimeline, _VARIANTS: VARIANTS, _MODES: MODES,
   get _state(){ return L; }
@@ -3025,8 +3067,9 @@ function makeRecord(day){
 /* the interactive avatar + finding + phases + metrics — reused by the report
    screen AND the calendar's past-day modal (data comes from `rec`) */
 function reportContent(rec, opts={}){
-  const bl=!!opts.bl, flagged=rec.phases.filter(p=>p.warn).length;
+  const one=!!opts.swing, bl=!!opts.bl || (one && rec.first), flagged=rec.phases.filter(p=>p.warn).length;
   return `
+    <div class="rc-av">
     <div class="avatar-stage" style="margin-top:6px">
       <div class="avatar-grid"></div>
       <div id="avatarWrap" class="avatarWrap">${avatarSVG(state.reportPhase)}</div>
@@ -3040,10 +3083,12 @@ function reportContent(rec, opts={}){
         <button data-act="rphase:${p.key}" aria-selected="${state.reportPhase===p.key}">${p.short}</button>`).join('')}
     </div>
     <div class="small dim center pseg-cap">Joint recognition · full-body tracking · flagged = needs work</div>
+    </div>
+    <div class="rc-read">
 
     <div class="card card-tight" style="margin-top:14px;border-color:rgba(63,95,88,.22)">
-      <span class="eyebrow">${bl?'Where you’re starting':'Key finding'}</span>
-      <div class="body" style="margin-top:7px;font-weight:600">${bl
+      <span class="eyebrow">${one?'This swing':bl?'Where you’re starting':'Key finding'}</span>
+      <div class="body" style="margin-top:7px;font-weight:600">${one ? rec.finding : bl
         ? 'Here’s your Day-0 read. Nothing to compare against yet — from tonight on, ARVIA tracks every change against these numbers.'
         : rec.finding}</div>
     </div>
@@ -3060,18 +3105,19 @@ function reportContent(rec, opts={}){
     </div>
 
     <div class="sec-title"><span class="h3">Swing metrics</span>
-      <span class="small ${bl?'dim':'lime'}">${bl?'Your Day-0 numbers':`${rec.improved} of ${rec.total} improved`}</span></div>
+      <span class="small ${bl?'dim':'lime'}">${one ? (rec.first?'First swing':`${rec.improved} of ${rec.total} better than last`)
+        : bl?'Your Day-0 numbers':`${rec.improved} of ${rec.total} improved`}</span></div>
     <div class="bento">
       ${rec.metrics.map(m=>`
         <div class="card metric">
           <div class="ml">${m.k}</div>
           <div class="mv" style="${m.warn?'color:var(--alert)':''}">${m.v}<small>${/^[:%]/.test(m.sub)?'':' '}${m.sub}</small></div>
-          ${bl?'<span class="delta flat" style="margin-top:7px">baseline</span>':deltaHTML(m.dir, m.d)}
+          ${bl?`<span class="delta flat" style="margin-top:7px">${one?'first swing':'baseline'}</span>`:deltaHTML(m.dir, m.d)}
           ${bl?'':`<div style="color:${m.warn?'var(--alert)':'var(--lime-deep)'}">${sparkline(m.spark)}</div>`}
         </div>`).join('')}
     </div>
 
-    ${bl?`
+    ${one?'':bl?`
     <div class="bento" style="margin-top:12px">
       <div class="card v-between" style="min-height:132px">
         <span class="eyebrow">Baseline</span>
@@ -3099,7 +3145,8 @@ function reportContent(rec, opts={}){
         </div>
         <div class="hd-cap dim">Keep the run going</div>
       </div>
-    </div>`}`;
+    </div>`}
+    </div>`;
 }
 
 /* Putting session → game-result report (no posture avatar, no spine/weight metrics) */
@@ -3820,9 +3867,9 @@ function openDetail(id, originEl){
   detail={id, phase:state.reportPhase};
   let o=$('#detail');
   if(!o){ o=document.createElement('div'); o.id='detail'; o.className='detail-overlay';
-    $('#phone').appendChild(o);                          // mount inside the phone frame
     o.addEventListener('click',e=>{ if(e.target===o || e.target.classList.contains('detail-back')) closeDetail(); });
   }
+  detailRoot().appendChild(o);                           // inside the phone frame — or over the swing read
   o.innerHTML=`<div class="detail-back"></div>
     <div class="detail-card" role="dialog" aria-label="${h.name} detail">
       <div class="row between" style="align-items:flex-start">
@@ -3855,9 +3902,9 @@ function openJointZoom(idx, originEl){
   detail={id:hsId||null, idx:+idx, phase};
   let o=$('#detail');
   if(!o){ o=document.createElement('div'); o.id='detail'; o.className='detail-overlay';
-    $('#phone').appendChild(o);
     o.addEventListener('click',e=>{ if(e.target===o || e.target.classList.contains('detail-back')) closeDetail(); });
   }
+  detailRoot().appendChild(o);                           // inside the phone frame — or over the swing read
   o.innerHTML=`<div class="detail-back"></div>
     <div class="detail-card" role="dialog" aria-label="${label} close-up">
       <div class="row between" style="align-items:flex-start">
@@ -3965,7 +4012,14 @@ document.addEventListener('click',e=>{
       if(!state.hasBaseline){ state.hasBaseline=true; state.baselineJustSet=true;
         DATA.user.baselineDate='Today'; }
       nav('report'); break; }
-    case 'zs-cancel': stopZsTimer(); if(window.Live) Live.end(false); hideOverlay('#zs'); break;
+    case 'sf-next': closeSwingFeedback(); break;
+    case 'sf-report': {
+      const done=document.querySelector('#zs [data-act="zs-done"]');
+      closeSwingFeedback(true);
+      if(done) done.click(); else { try{ window.dispatchEvent(new CustomEvent('orvia:report')); }catch(_){} }
+      break; }
+    case 'sf-again': closeSwingFeedback(true); try{ window.dispatchEvent(new CustomEvent('orvia:again')); }catch(_){} break;
+    case 'zs-cancel': stopZsTimer(); closeSwingFeedback(true); if(window.Live) Live.end(false); hideOverlay('#zs'); break;
   }
 });
 
@@ -4329,6 +4383,105 @@ window.addEventListener('resize', fitPhone, {passive:true});
 window.addEventListener('orientationchange', fitPhone);
 fitPhone();
 
+/* ====================================================== SWING READ ====== */
+/* The read after every swing on the stand camera. It is the session report's own
+   anatomy — glow avatar of THIS swing (its seven captured frames), the phase strip,
+   posture by phase and the four swing metrics — for one swing, compared with the
+   swing before it. It grows out of the camera window; taking the address again, or
+   Next swing, puts the camera back. Ten swings in, it hands over to the report. */
+window.ORVIA_SWING_SHEET = true;                   // live.js: the sheet replaces the small in-window card
+let sfOpenAt=0, sfCloseT=0, sfKind=null;
+function detailRoot(){
+  const sf=document.querySelector('#swingfb.show');
+  return sf ? sf.parentElement : ($('#phone') || document.querySelector('.ipad-screen') || document.body);
+}
+function sfMount(){
+  const zs=document.querySelector('#zs .zs'); if(!zs) return null;
+  let o=zs.querySelector('#swingfb');
+  if(!o){ o=document.createElement('div'); o.id='swingfb'; o.className='record-overlay sf'; zs.appendChild(o);
+    o.addEventListener('click',e=>{ if(e.target.classList.contains('record-back')) closeSwingFeedback(); }); }
+  return o;
+}
+function sfScore(rec){
+  const lvl=rec.score>=85?'good':rec.score>=65?'warn':'alert';
+  return `<div class="sf-score ${lvl}"><b>${rec.score}</b><span>score</span></div>`;
+}
+function swingFeedbackHTML(rec){
+  const done=rec.n>=rec.sets;
+  return `<div class="record-back"></div>
+    <div class="record-card sf-card" role="dialog" aria-label="Swing ${rec.n} read">
+      <div class="record-head">
+        <div class="sf-titles"><div class="eyebrow">${done?`Set complete · swing ${rec.n} of ${rec.sets}`:`Swing ${rec.n} of ${rec.sets}`} · ${rec.mode}</div>
+          <div class="h3 sf-coach">${rec.coach?rec.coach.text:''}</div></div>
+        ${sfScore(rec)}
+      </div>
+      <div class="record-scroll">${reportContent(rec,{swing:true})}</div>
+      <div class="sf-foot">
+        <button class="btn btn-primary" data-act="${done?'sf-report':'sf-next'}">${done?'See the session report':'Next swing'}</button>
+        <div class="small dim center sf-hint">${done?'Ten swings in — here’s how the whole set went.':'Or just take your address — the camera picks you back up.'}</div>
+      </div>
+    </div>`;
+}
+function sessionSheetHTML(rec){
+  return `<div class="record-back"></div>
+    <div class="record-card sf-card" role="dialog" aria-label="Session report">
+      <div class="record-head">
+        <div class="sf-titles"><div class="eyebrow">${rec.demo?'Session report · demo golfer':'Session report'}</div>
+          <div class="h3 sf-coach">${rec.label}</div></div>
+        <button class="icon-btn sm" data-act="sf-next" aria-label="Close">${svgIco(I.x)}</button>
+      </div>
+      <div class="record-scroll">${reportContent(rec,{})}</div>
+      <div class="sf-foot"><button class="btn btn-primary" data-act="sf-again">Track again</button></div>
+    </div>`;
+}
+function showSheet(html, kind){
+  const o=sfMount(); if(!o) return null;
+  hardCloseDetail(); swingStop(); clearTimeout(sfCloseT);
+  o.innerHTML=html; sfKind=kind; sfOpenAt=performance.now();
+  if(window.Live && Live.hold) Live.hold(true);
+  o.classList.remove('in'); o.classList.add('show');
+  growFrom(o.querySelector('.record-card'), document.querySelector('#zs .zc-window'));   // rises out of the camera
+  setTimeout(()=>{ o.classList.add('in'); setTimeout(()=>{ if(sfKind) swingStart(true); }, 700); }, 20);
+  return o;
+}
+function openSwingFeedback(rep){
+  if(!window.Live || !Live.swingRecord) return;
+  const rec=Live.swingRecord(rep);
+  curRecord=rec; state.reportPhase='impact';
+  showSheet(swingFeedbackHTML(rec), 'swing');
+  // the demo golfer can't step back into an address while it waits — the read gives way on its own
+  if(rec.demo && rec.n<rec.sets) sfCloseT=setTimeout(closeSwingFeedback, 9000);
+  // the cut-out silhouettes land a moment later — swap them in once they are ready
+  setTimeout(()=>{ if(sfKind==='swing' && curRecord===rec && !_swingT){ Object.assign(rec, Live.swingRecord(rep)); paintAvatar(); } }, 2600);
+}
+function openSessionSheet(rec){
+  if(!rec) return;
+  curRecord=rec; state.reportPhase='address';
+  showSheet(sessionSheetHTML(rec), 'session');
+}
+function closeSwingFeedback(now){
+  const o=document.querySelector('#swingfb'); clearTimeout(sfCloseT);
+  if(!o || !o.classList.contains('show')) return;
+  hardCloseDetail(); swingStop(); sfKind=null;
+  if(window.Live && Live.hold) Live.hold(false);
+  if(now){ o.className='record-overlay sf'; o.innerHTML=''; return; }
+  o.classList.remove('in');
+  const card=o.querySelector('.record-card'), done=()=>{ if(!o.classList.contains('in')){ o.classList.remove('show'); o.innerHTML=''; } };
+  if(card) card.addEventListener('transitionend',done,{once:true});
+  setTimeout(done,420);
+}
+window.addEventListener('orvia:swing', e=>{
+  const d=e.detail||{}; if(!d.rep || d.rep.type==='putt') return;
+  setTimeout(()=>openSwingFeedback(d.rep), 650);     // let the finish land first
+});
+// stepping back into the address is the "next" — but never before the read has had 3 s
+window.addEventListener('orvia:address', e=>{
+  if(sfKind!=='swing') return;
+  const left=3000-(performance.now()-sfOpenAt);
+  if(left<=0) closeSwingFeedback(); else { clearTimeout(sfCloseT); sfCloseT=setTimeout(closeSwingFeedback,left); }
+});
+window.ORVIA_UI = { openSwingFeedback, openSessionSheet, closeSwingFeedback };
+
 /* ================================================================= INIT === */
 function init(){
   const q=new URLSearchParams(location.search);
@@ -4341,7 +4494,7 @@ function init(){
   if(q.get('launch')==='0'){ if(q.get('ob')!=='0') showOnboarding(); }
   else showLaunch();                                 // first entry: launch screen
 }
-init();
+if(!window.ORVIA_EMBED) init();          // the iPad tracking page borrows the report pieces without booting the app
 
 </script>
 </body>

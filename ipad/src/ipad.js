@@ -61,6 +61,7 @@
 
   function start(demo){
     $('#mcSheet').hidden=true; $('#mcDemo').hidden=true;
+    if(window.ORVIA_UI) ORVIA_UI.closeSwingFeedback(true);
     const zs=$('#zs .zs');
     zs.querySelectorAll('.zc-video,.zc-canvas,.zc-modes,.zc-note,.zc-debug,.zc-log,.zc-camon,.zc-camcard').forEach(e=>e.remove());
     zs.querySelector('.zc-inner').classList.remove('is-live','is-demo');
@@ -78,9 +79,10 @@
   }
   function stop(){
     running=false; clearInterval(timer);
-    Live.end(false);
+    const rec=Live.end(true);
     $('#mcEnd').textContent='Start with camera'; $('#mcDemo').hidden=false;
-    showResults();
+    // the app's own session report, over the camera — the diagnostics sheet only when nothing was tracked
+    if(rec && rec.type==='swing' && window.ORVIA_UI) ORVIA_UI.openSessionSheet(rec); else showResults();
   }
   function showResults(){
     const log=Live.lastLog, sw=(log&&log.swings)||[];
@@ -109,7 +111,9 @@
   }
 
   // ten swings in: give the last read a moment on screen, then the results
-  window.addEventListener('orvia:setdone', ()=>{ setTimeout(()=>{ if(running) stop(); }, 4500); });
+  // the tenth swing's read offers the session report; these come from its buttons
+  window.addEventListener('orvia:report', ()=>{ if(running) stop(); });
+  window.addEventListener('orvia:again', ()=>start(false));
 
   camCheck();
   $('#mcEnd').addEventListener('click',()=>running?stop():start(false));

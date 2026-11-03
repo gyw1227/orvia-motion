@@ -644,6 +644,9 @@ function loopDemo(){
   if(!L.on || L.source!=='demo') return;
   L.raf=requestAnimationFrame(loopDemo);
   const now=performance.now(), type=MODES[L.mode].type;
+  // held while a swing read is open — the demo golfer waits, like a person reading would
+  if(L.hold && L.lastDemoNow) L.demo.start+=now-L.lastDemoNow;
+  L.lastDemoNow=now;
   let tl=demoTimeline(type, VARIANTS[L.demo.i%VARIANTS.length]), t=(now-L.demo.start)/1000;
   if(t>tl.total){ L.demo.i++; L.demo.start=now; t=0; }
   const lm=demoPose(t, type, L.demo.i, L.handed);
@@ -714,7 +717,7 @@ function note(text, ms){
 function onEvent(e, lm){
   if(L.log && e.type!=='swing') L.log.events.push([Math.round(e.t-L.t0), e.type, e.phase||'']);
   if(e.type==='phase'){
-    if(e.phase==='address'){ if(L.swings.length<L.sets) hideSwingCard(); L.trail=[]; L.curFrames={}; SND.lock(); if(!L._saidLaser){ L._saidLaser=true; say('Laser on. Swing when ready.'); } }
+    if(e.phase==='address'){ emit('orvia:address', {n:L.swings.length, demo:L.source==='demo'}); if(L.swings.length<L.sets) hideSwingCard(); L.trail=[]; L.curFrames={}; SND.lock(); if(!L._saidLaser){ L._saidLaser=true; say('Laser on. Swing when ready.'); } }
     if(e.phase==='downswing') SND.whoosh(MODES[L.mode].type==='putt'?.25:.32);
     if(L.stand) L.stand.setPhase(e.phase);
   } else if(e.type==='capture'){
@@ -740,7 +743,8 @@ function onSwing(rep){
   const tEl=document.getElementById('zsTempo');
   if(tEl) tEl.innerHTML=`${rep.tempo.ratio.toFixed(1)}<span class="zs-sets-tot">:1</span>`;
   setTitle(rep.coach.text);
-  swingCard(rep, n);
+  if(!window.ORVIA_SWING_SHEET || rep.type==='putt') swingCard(rep, n);
+  emit('orvia:swing', {rep, n, sets:L.sets, done:n>=L.sets});
   if(L.stand) L.stand.swing(rep);
   const done = n===L.sets;
   setTimeout(()=>say(done ? `${rep.coach.text} That’s the set — end the session for your report.` : rep.coach.text), 450);
@@ -1198,10 +1202,12 @@ function drawStand(lm, r){
    from the swings that were actually tracked — plus the frames, joint dots and
    coached-joint points so the avatar, strip and close-ups show this golfer. */
 function avg(a){ return a.reduce((s,v)=>s+v,0)/(a.length||1); }
-function buildRecord(){
-  const sw=L.swings.filter(s=>s.type!=='putt'), pt=L.swings.filter(s=>s.type==='putt');
-  if(pt.length>sw.length) return { type:'putt', putt:puttRecord(pt) };
-  const list=sw.length?sw:L.swings;
+function buildRecord(only, opts){
+  opts=opts||{};
+  const pool=only||L.swings;
+  const sw=pool.filter(s=>s.type!=='putt'), pt=pool.filter(s=>s.type==='putt');
+  if(!only && pt.length>sw.length) return { type:'putt', putt:puttRecord(pt) };
+  const list=sw.length?sw:pool;
   const last=list[list.length-1];
   const mode=MODES[last.mode], R=last.handed==='R';
   const ph=last.ph, tg=mode.t;
@@ -1253,7 +1259,15 @@ function buildRecord(){
   const head=Math.round(clamp(100-headCm*2,40,100)), weight=Math.round(avg(list.map(s=>s.ph.impact.weight)));
   const rels=list.map(s=>relOf(s.releaseMs));
   const relMode=['On time','Early','Late'].map(k=>[k,rels.filter(r=>r===k).length]).sort((a,b)=>b[1]-a[1])[0][0];
-  const D=(typeof DATA!=='undefined'&&DATA.report)||null, prev=k=>D?(D.metrics.find(m=>m.k===k)||{}):{};
+  // compare against: the swing before this one (per-swing read), or the last session (session report)
+  const headOf=s=>Math.round(clamp(100-s.headMax*2,40,100));
+  const SWV={ 'Tempo':s=>+s.tempo.ratio.toFixed(1), 'Head Steadiness':headOf, 'Weight Transfer':s=>Math.round(s.ph.impact.weight) };
+  let D=(typeof DATA!=='undefined'&&DATA.report)||null;
+  if(opts.history){
+    const hist=opts.history, before=hist.slice(0,-1), pr=before[before.length-1];
+    D = pr ? { metrics:Object.keys(SWV).map(k=>({k, v:''+SWV[k](pr), spark:hist.slice(-5,-1).map(SWV[k])})) } : null;
+  }
+  const prev=k=>D?(D.metrics.find(m=>m.k===k)||{}):{};
   const pv=k=>parseFloat(prev(k).v);
   const sp=(k,v)=>{ const s=(prev(k).spark||[]).slice(-4); return s.length?[...s,v]:[v,v]; };
   const dirOf=(v,p,better)=>{ if(isNaN(p)) return 'flat';
@@ -1285,7 +1299,7 @@ function buildRecord(){
 
   return {
     type:'swing', live:true, demo:L.source==='demo',
-    label:`Tonight · ${list.length} swing${list.length>1?'s':''}`,
+    label: opts.history ? `Swing ${opts.n||list.length}` : `Tonight · ${list.length} swing${list.length>1?'s':''}`,
     hotspots:hs, finding:findingFor(list,last,{shSt,tiltSt,wImpSt,wFinSt,relSt,tempo,head,weight}),
     phases, metrics, success, streak:(D&&D.streak)||1,
     improved: metrics.filter(m=>m.dir==='up').length, total:4,
@@ -1294,6 +1308,16 @@ function buildRecord(){
     note:'Tracked live from the stand.'
   };
 }
+/* one swing, read on its own — the report's avatar, phases and metrics for this swing,
+   compared with the swing before it in the session */
+function swingRecord(rep){
+  const i=L.swings.indexOf(rep), hist=L.swings.slice(0, i<0?L.swings.length:i+1).filter(s=>s.type!=='putt');
+  const r=buildRecord([rep], {history:hist, n:rep.n});
+  r.finding=r.finding.replace(' session from address',' swing from address').replace('A starting point:','This swing:');
+  r.score=rep.score; r.coach=rep.coach; r.n=rep.n; r.sets=L.sets; r.first=hist.length<2;
+  return r;
+}
+function emit(name, detail){ try{ window.dispatchEvent(new CustomEvent(name,{detail})); }catch(e){} }
 function findingFor(list,last,s){
   const n=list.length, mode=last.mode.toLowerCase();
   const good=[], bad=[];
@@ -1332,6 +1356,7 @@ const Live = {
   get swings(){ return L.swings; },
   set mission(m){ L.mission=m; }, get mission(){ return L.mission; },
   set voice(v){ voiceOn=!!v; }, get voice(){ return voiceOn; },
+  hold(on){ L.hold=!!on; }, swingRecord, sessionRecord:()=>L.swings.length?buildRecord():null,
   // exposed for automated checks
   _engine: createEngine, _demoPose: demoPose, _demoTimeline: demoTimeline, _VARIANTS: VARIANTS, _MODES: MODES,
   get _state(){ return L; }

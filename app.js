@@ -519,8 +519,9 @@ function makeRecord(day){
 /* the interactive avatar + finding + phases + metrics — reused by the report
    screen AND the calendar's past-day modal (data comes from `rec`) */
 function reportContent(rec, opts={}){
-  const bl=!!opts.bl, flagged=rec.phases.filter(p=>p.warn).length;
+  const one=!!opts.swing, bl=!!opts.bl || (one && rec.first), flagged=rec.phases.filter(p=>p.warn).length;
   return `
+    <div class="rc-av">
     <div class="avatar-stage" style="margin-top:6px">
       <div class="avatar-grid"></div>
       <div id="avatarWrap" class="avatarWrap">${avatarSVG(state.reportPhase)}</div>
@@ -534,10 +535,12 @@ function reportContent(rec, opts={}){
         <button data-act="rphase:${p.key}" aria-selected="${state.reportPhase===p.key}">${p.short}</button>`).join('')}
     </div>
     <div class="small dim center pseg-cap">Joint recognition · full-body tracking · flagged = needs work</div>
+    </div>
+    <div class="rc-read">
 
     <div class="card card-tight" style="margin-top:14px;border-color:rgba(63,95,88,.22)">
-      <span class="eyebrow">${bl?'Where you’re starting':'Key finding'}</span>
-      <div class="body" style="margin-top:7px;font-weight:600">${bl
+      <span class="eyebrow">${one?'This swing':bl?'Where you’re starting':'Key finding'}</span>
+      <div class="body" style="margin-top:7px;font-weight:600">${one ? rec.finding : bl
         ? 'Here’s your Day-0 read. Nothing to compare against yet — from tonight on, ARVIA tracks every change against these numbers.'
         : rec.finding}</div>
     </div>
@@ -554,18 +557,19 @@ function reportContent(rec, opts={}){
     </div>
 
     <div class="sec-title"><span class="h3">Swing metrics</span>
-      <span class="small ${bl?'dim':'lime'}">${bl?'Your Day-0 numbers':`${rec.improved} of ${rec.total} improved`}</span></div>
+      <span class="small ${bl?'dim':'lime'}">${one ? (rec.first?'First swing':`${rec.improved} of ${rec.total} better than last`)
+        : bl?'Your Day-0 numbers':`${rec.improved} of ${rec.total} improved`}</span></div>
     <div class="bento">
       ${rec.metrics.map(m=>`
         <div class="card metric">
           <div class="ml">${m.k}</div>
           <div class="mv" style="${m.warn?'color:var(--alert)':''}">${m.v}<small>${/^[:%]/.test(m.sub)?'':' '}${m.sub}</small></div>
-          ${bl?'<span class="delta flat" style="margin-top:7px">baseline</span>':deltaHTML(m.dir, m.d)}
+          ${bl?`<span class="delta flat" style="margin-top:7px">${one?'first swing':'baseline'}</span>`:deltaHTML(m.dir, m.d)}
           ${bl?'':`<div style="color:${m.warn?'var(--alert)':'var(--lime-deep)'}">${sparkline(m.spark)}</div>`}
         </div>`).join('')}
     </div>
 
-    ${bl?`
+    ${one?'':bl?`
     <div class="bento" style="margin-top:12px">
       <div class="card v-between" style="min-height:132px">
         <span class="eyebrow">Baseline</span>
@@ -593,7 +597,8 @@ function reportContent(rec, opts={}){
         </div>
         <div class="hd-cap dim">Keep the run going</div>
       </div>
-    </div>`}`;
+    </div>`}
+    </div>`;
 }
 
 /* Putting session → game-result report (no posture avatar, no spine/weight metrics) */
@@ -1314,9 +1319,9 @@ function openDetail(id, originEl){
   detail={id, phase:state.reportPhase};
   let o=$('#detail');
   if(!o){ o=document.createElement('div'); o.id='detail'; o.className='detail-overlay';
-    $('#phone').appendChild(o);                          // mount inside the phone frame
     o.addEventListener('click',e=>{ if(e.target===o || e.target.classList.contains('detail-back')) closeDetail(); });
   }
+  detailRoot().appendChild(o);                           // inside the phone frame — or over the swing read
   o.innerHTML=`<div class="detail-back"></div>
     <div class="detail-card" role="dialog" aria-label="${h.name} detail">
       <div class="row between" style="align-items:flex-start">
@@ -1349,9 +1354,9 @@ function openJointZoom(idx, originEl){
   detail={id:hsId||null, idx:+idx, phase};
   let o=$('#detail');
   if(!o){ o=document.createElement('div'); o.id='detail'; o.className='detail-overlay';
-    $('#phone').appendChild(o);
     o.addEventListener('click',e=>{ if(e.target===o || e.target.classList.contains('detail-back')) closeDetail(); });
   }
+  detailRoot().appendChild(o);                           // inside the phone frame — or over the swing read
   o.innerHTML=`<div class="detail-back"></div>
     <div class="detail-card" role="dialog" aria-label="${label} close-up">
       <div class="row between" style="align-items:flex-start">
@@ -1459,7 +1464,14 @@ document.addEventListener('click',e=>{
       if(!state.hasBaseline){ state.hasBaseline=true; state.baselineJustSet=true;
         DATA.user.baselineDate='Today'; }
       nav('report'); break; }
-    case 'zs-cancel': stopZsTimer(); if(window.Live) Live.end(false); hideOverlay('#zs'); break;
+    case 'sf-next': closeSwingFeedback(); break;
+    case 'sf-report': {
+      const done=document.querySelector('#zs [data-act="zs-done"]');
+      closeSwingFeedback(true);
+      if(done) done.click(); else { try{ window.dispatchEvent(new CustomEvent('orvia:report')); }catch(_){} }
+      break; }
+    case 'sf-again': closeSwingFeedback(true); try{ window.dispatchEvent(new CustomEvent('orvia:again')); }catch(_){} break;
+    case 'zs-cancel': stopZsTimer(); closeSwingFeedback(true); if(window.Live) Live.end(false); hideOverlay('#zs'); break;
   }
 });
 
@@ -1823,6 +1835,105 @@ window.addEventListener('resize', fitPhone, {passive:true});
 window.addEventListener('orientationchange', fitPhone);
 fitPhone();
 
+/* ====================================================== SWING READ ====== */
+/* The read after every swing on the stand camera. It is the session report's own
+   anatomy — glow avatar of THIS swing (its seven captured frames), the phase strip,
+   posture by phase and the four swing metrics — for one swing, compared with the
+   swing before it. It grows out of the camera window; taking the address again, or
+   Next swing, puts the camera back. Ten swings in, it hands over to the report. */
+window.ORVIA_SWING_SHEET = true;                   // live.js: the sheet replaces the small in-window card
+let sfOpenAt=0, sfCloseT=0, sfKind=null;
+function detailRoot(){
+  const sf=document.querySelector('#swingfb.show');
+  return sf ? sf.parentElement : ($('#phone') || document.querySelector('.ipad-screen') || document.body);
+}
+function sfMount(){
+  const zs=document.querySelector('#zs .zs'); if(!zs) return null;
+  let o=zs.querySelector('#swingfb');
+  if(!o){ o=document.createElement('div'); o.id='swingfb'; o.className='record-overlay sf'; zs.appendChild(o);
+    o.addEventListener('click',e=>{ if(e.target.classList.contains('record-back')) closeSwingFeedback(); }); }
+  return o;
+}
+function sfScore(rec){
+  const lvl=rec.score>=85?'good':rec.score>=65?'warn':'alert';
+  return `<div class="sf-score ${lvl}"><b>${rec.score}</b><span>score</span></div>`;
+}
+function swingFeedbackHTML(rec){
+  const done=rec.n>=rec.sets;
+  return `<div class="record-back"></div>
+    <div class="record-card sf-card" role="dialog" aria-label="Swing ${rec.n} read">
+      <div class="record-head">
+        <div class="sf-titles"><div class="eyebrow">${done?`Set complete · swing ${rec.n} of ${rec.sets}`:`Swing ${rec.n} of ${rec.sets}`} · ${rec.mode}</div>
+          <div class="h3 sf-coach">${rec.coach?rec.coach.text:''}</div></div>
+        ${sfScore(rec)}
+      </div>
+      <div class="record-scroll">${reportContent(rec,{swing:true})}</div>
+      <div class="sf-foot">
+        <button class="btn btn-primary" data-act="${done?'sf-report':'sf-next'}">${done?'See the session report':'Next swing'}</button>
+        <div class="small dim center sf-hint">${done?'Ten swings in — here’s how the whole set went.':'Or just take your address — the camera picks you back up.'}</div>
+      </div>
+    </div>`;
+}
+function sessionSheetHTML(rec){
+  return `<div class="record-back"></div>
+    <div class="record-card sf-card" role="dialog" aria-label="Session report">
+      <div class="record-head">
+        <div class="sf-titles"><div class="eyebrow">${rec.demo?'Session report · demo golfer':'Session report'}</div>
+          <div class="h3 sf-coach">${rec.label}</div></div>
+        <button class="icon-btn sm" data-act="sf-next" aria-label="Close">${svgIco(I.x)}</button>
+      </div>
+      <div class="record-scroll">${reportContent(rec,{})}</div>
+      <div class="sf-foot"><button class="btn btn-primary" data-act="sf-again">Track again</button></div>
+    </div>`;
+}
+function showSheet(html, kind){
+  const o=sfMount(); if(!o) return null;
+  hardCloseDetail(); swingStop(); clearTimeout(sfCloseT);
+  o.innerHTML=html; sfKind=kind; sfOpenAt=performance.now();
+  if(window.Live && Live.hold) Live.hold(true);
+  o.classList.remove('in'); o.classList.add('show');
+  growFrom(o.querySelector('.record-card'), document.querySelector('#zs .zc-window'));   // rises out of the camera
+  setTimeout(()=>{ o.classList.add('in'); setTimeout(()=>{ if(sfKind) swingStart(true); }, 700); }, 20);
+  return o;
+}
+function openSwingFeedback(rep){
+  if(!window.Live || !Live.swingRecord) return;
+  const rec=Live.swingRecord(rep);
+  curRecord=rec; state.reportPhase='impact';
+  showSheet(swingFeedbackHTML(rec), 'swing');
+  // the demo golfer can't step back into an address while it waits — the read gives way on its own
+  if(rec.demo && rec.n<rec.sets) sfCloseT=setTimeout(closeSwingFeedback, 9000);
+  // the cut-out silhouettes land a moment later — swap them in once they are ready
+  setTimeout(()=>{ if(sfKind==='swing' && curRecord===rec && !_swingT){ Object.assign(rec, Live.swingRecord(rep)); paintAvatar(); } }, 2600);
+}
+function openSessionSheet(rec){
+  if(!rec) return;
+  curRecord=rec; state.reportPhase='address';
+  showSheet(sessionSheetHTML(rec), 'session');
+}
+function closeSwingFeedback(now){
+  const o=document.querySelector('#swingfb'); clearTimeout(sfCloseT);
+  if(!o || !o.classList.contains('show')) return;
+  hardCloseDetail(); swingStop(); sfKind=null;
+  if(window.Live && Live.hold) Live.hold(false);
+  if(now){ o.className='record-overlay sf'; o.innerHTML=''; return; }
+  o.classList.remove('in');
+  const card=o.querySelector('.record-card'), done=()=>{ if(!o.classList.contains('in')){ o.classList.remove('show'); o.innerHTML=''; } };
+  if(card) card.addEventListener('transitionend',done,{once:true});
+  setTimeout(done,420);
+}
+window.addEventListener('orvia:swing', e=>{
+  const d=e.detail||{}; if(!d.rep || d.rep.type==='putt') return;
+  setTimeout(()=>openSwingFeedback(d.rep), 650);     // let the finish land first
+});
+// stepping back into the address is the "next" — but never before the read has had 3 s
+window.addEventListener('orvia:address', e=>{
+  if(sfKind!=='swing') return;
+  const left=3000-(performance.now()-sfOpenAt);
+  if(left<=0) closeSwingFeedback(); else { clearTimeout(sfCloseT); sfCloseT=setTimeout(closeSwingFeedback,left); }
+});
+window.ORVIA_UI = { openSwingFeedback, openSessionSheet, closeSwingFeedback };
+
 /* ================================================================= INIT === */
 function init(){
   const q=new URLSearchParams(location.search);
@@ -1835,4 +1946,4 @@ function init(){
   if(q.get('launch')==='0'){ if(q.get('ob')!=='0') showOnboarding(); }
   else showLaunch();                                 // first entry: launch screen
 }
-init();
+if(!window.ORVIA_EMBED) init();          // the iPad tracking page borrows the report pieces without booting the app
