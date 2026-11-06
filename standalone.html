@@ -1141,6 +1141,7 @@ svg.mk-layer{position:absolute;inset:0;width:100%;height:100%;overflow:visible;t
 
 /* no fade when the camera answers — the picture is there at 0 s */
 .zc-video.now,.st-video.now{transition:none}
+.sf .sf-x{flex:0 0 auto;margin-left:-4px;align-self:flex-start}
 
 </style>
 </head>
@@ -4129,13 +4130,7 @@ document.addEventListener('click',e=>{
       if(!state.hasBaseline){ state.hasBaseline=true; state.baselineJustSet=true;
         DATA.user.baselineDate='Today'; }
       nav('report'); break; }
-    case 'sf-next': closeSwingFeedback(); break;
-    case 'sf-report': {
-      const done=document.querySelector('#zs [data-act="zs-done"]');
-      closeSwingFeedback(true);
-      if(done) done.click(); else { try{ window.dispatchEvent(new CustomEvent('orvia:report')); }catch(_){} }
-      break; }
-    case 'sf-again': closeSwingFeedback(true); try{ window.dispatchEvent(new CustomEvent('orvia:again')); }catch(_){} break;
+    case 'sf-next': case 'sf-report': case 'sf-again': sfAct(act); break;
     case 'zs-cancel': stopZsTimer(); closeSwingFeedback(true); if(window.Live) Live.end(false); hideOverlay('#zs'); break;
   }
 });
@@ -4531,6 +4526,7 @@ function swingFeedbackHTML(rec){
         <div class="sf-titles"><div class="eyebrow">${done?`Set complete · swing ${rec.n} of ${rec.sets}`:`Swing ${rec.n} of ${rec.sets}`} · ${rec.mode}</div>
           <div class="h3 sf-coach">${rec.coach?rec.coach.text:''}</div></div>
         ${sfScore(rec)}
+        <button class="icon-btn sm sf-x" data-act="${done?'sf-report':'sf-next'}" aria-label="Close">${svgIco(I.x)}</button>
       </div>
       <div class="record-scroll">${reportContent(rec,{swing:true})}</div>
       <div class="sf-foot">
@@ -4555,6 +4551,12 @@ function showSheet(html, kind){
   const o=sfMount(); if(!o) return null;
   hardCloseDetail(); swingStop(); clearTimeout(sfCloseT);
   o.innerHTML=html; sfKind=kind; sfOpenAt=performance.now();
+  // the sheet's buttons answer on their own (touch first), not only through the page-wide click handler
+  o.querySelectorAll('[data-act^="sf-"]').forEach(b=>{
+    let fired=0;
+    const go=e=>{ e.preventDefault(); e.stopPropagation(); const now=performance.now(); if(now-fired<500) return; fired=now; sfAct(b.dataset.act); };
+    b.addEventListener('touchend', go, {passive:false}); b.addEventListener('click', go);
+  });
   if(window.Live && Live.hold) Live.hold(true);
   o.classList.remove('in'); o.classList.add('show');
   growFrom(o.querySelector('.record-card'), document.querySelector('#zs .zc-window'));   // rises out of the camera
@@ -4567,7 +4569,7 @@ function openSwingFeedback(rep){
   curRecord=rec; state.reportPhase='impact';
   showSheet(swingFeedbackHTML(rec), 'swing');
   // the demo golfer can't step back into an address while it waits — the read gives way on its own
-  if(rec.demo && rec.n<rec.sets) sfCloseT=setTimeout(closeSwingFeedback, 9000);
+  if(rec.n<rec.sets) sfCloseT=setTimeout(closeSwingFeedback, rec.demo?9000:12000);
   // the cut-out silhouettes land a moment later — swap them in once they are ready
   setTimeout(()=>{ if(sfKind==='swing' && curRecord===rec && !_swingT){ Object.assign(rec, Live.swingRecord(rep)); paintAvatar(); } }, 2600);
 }
@@ -4575,6 +4577,16 @@ function openSessionSheet(rec){
   if(!rec) return;
   curRecord=rec; state.reportPhase='address';
   showSheet(sessionSheetHTML(rec), 'session');
+}
+function sfAct(act){
+  if(act==='sf-next'){ closeSwingFeedback(); return; }
+  if(act==='sf-report'){
+    const done=document.querySelector('#zs [data-act="zs-done"]');
+    closeSwingFeedback(true);
+    if(done) done.click(); else { try{ window.dispatchEvent(new CustomEvent('orvia:report')); }catch(_){} }
+    return;
+  }
+  if(act==='sf-again'){ closeSwingFeedback(true); try{ window.dispatchEvent(new CustomEvent('orvia:again')); }catch(_){} }
 }
 function closeSwingFeedback(now){
   const o=document.querySelector('#swingfb'); clearTimeout(sfCloseT);
