@@ -1194,17 +1194,6 @@ function mountStand(){
     <div class="st-phase"><div class="st-ph" id="stPh">Standby</div>
       <div class="st-modeline"><b class="st-mode-n">${L.mode}</b><span class="st-mm">weight at ${MODES[L.mode].mm} mm</span></div></div>
     <div class="st-note" aria-live="polite"></div>
-    <div class="st-foot">
-      <div class="st-rail">${['address','takeaway','top','downswing','impact','through','finish'].map(p=>
-        `<span data-p="${p}"><i></i>${phaseName(p)}</span>`).join('')}</div>
-      <div class="st-read">
-        <div><b id="stTempo">–</b><span>Tempo</span></div>
-        <div><b id="stTurn">–</b><span>Shoulder turn</span></div>
-        <div><b id="stHead">–</b><span>Head</span></div>
-        <div><b id="stWeight">–</b><span>Weight</span></div>
-        <div><b id="stSpeed">–</b><span>Hand speed</span></div>
-      </div>
-    </div>
     <img class="st-logo" src="${logo}" alt="">
     <pre class="st-debug" hidden></pre>
   </section>`);
@@ -1217,21 +1206,10 @@ function mountStand(){
     setPhase(p){
       ph.textContent=phaseName(p);
       ph.classList.remove('swap'); void ph.offsetWidth; ph.classList.add('swap');
-      el.querySelectorAll('.st-rail span').forEach(s=>s.classList.toggle('on', s.dataset.p===p));
     },
     setMode(n){ el.querySelector('.st-mode-n').textContent=n; el.querySelector('.st-mm').textContent='weight at '+MODES[n].mm+' mm'; },
     pulse(){ el.classList.remove('hit'); void el.offsetWidth; el.classList.add('hit'); },
-    swing(rep){
-      const P=rep.type==='putt';
-      el.querySelector('#stTempo').innerHTML=`${rep.tempo.ratio.toFixed(1)}<small>:1</small>`;
-      el.querySelector('#stTurn').innerHTML=P?`${Math.round(rep.ph.top.rock)}<small>°</small>`:`${Math.round(rep.ph.top.shoulder)}<small>°</small>`;
-      el.querySelector('#stHead').innerHTML=`${rep.headMax.toFixed(1)}<small> cm</small>`;
-      el.querySelector('#stWeight').innerHTML=P?`${rep.swayMax.toFixed(1)}<small> cm</small>`:`${Math.round(rep.ph.impact.weight)}<small>% lead</small>`;
-      el.querySelector('#stSpeed').innerHTML=`${rep.peakSpeed.toFixed(1)}<small> m/s</small>`;
-      const labs=P?['Tempo','Shoulder rock','Head','Lower-body sway','Hand speed']:['Tempo','Shoulder turn','Head','Weight','Hand speed'];
-      el.querySelectorAll('.st-read span').forEach((sp,i)=>{ sp.textContent=labs[i]; });
-      el.querySelectorAll('.st-read div').forEach((d,i)=>{ d.classList.remove('fresh'); void d.offsetWidth; d.style.animationDelay=(i*.06)+'s'; d.classList.add('fresh'); });
-    }
+    swing(){}   // the stand camera keeps to the picture — the read lives in the swing sheet
   };
 }
 function syncStandLayout(){

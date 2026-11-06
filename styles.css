@@ -1022,7 +1022,7 @@ svg.mk-layer{position:absolute;inset:0;width:100%;height:100%;overflow:visible;t
 #zs.stand-on .stand{display:block;position:relative;justify-self:stretch;width:100%;max-width:1040px;margin-left:auto;
   height:calc(912px * var(--pscale,1));border-radius:44px;overflow:hidden;isolation:isolate;color:#EEF1E8;
   background:radial-gradient(130% 100% at 50% 38%,#0b1913 0%,#050d09 60%,#020504 100%);
-  box-shadow:var(--phone-shadow);animation:stIn .7s cubic-bezier(.2,.75,.2,1) both;--st-foot:176px}
+  box-shadow:var(--phone-shadow);animation:stIn .7s cubic-bezier(.2,.75,.2,1) both;--st-foot:0px}
 @keyframes stIn{from{opacity:0;transform:translateY(14px)}to{opacity:1;transform:none}}
 .st-video{position:absolute;left:0;right:0;top:0;bottom:var(--st-foot);width:100%;height:calc(100% - var(--st-foot));object-fit:cover;opacity:0;transition:opacity .6s ease}
 .st-video.on{opacity:.88}
