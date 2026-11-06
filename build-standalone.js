@@ -7,6 +7,7 @@ const dir = __dirname;
 const read = f => fs.readFileSync(path.join(dir, f), 'utf8');
 
 let html = read('index.html');
+html = html.replace(/\?v=\d+"/g, '"');   // cache-busting stamps only matter on the live site
 let css = read('styles.css');
 let js = read('app.js');
 let live = read('live.js');
