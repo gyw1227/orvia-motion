@@ -593,8 +593,9 @@ function startSource(){
     .then(s=>{
       if(!L.on){ s.getTracks().forEach(t=>t.stop()); return; }
       L.stream=s;
-      [L.cam&&L.cam.video, L.stand&&L.stand.video].forEach(v=>{ if(v){ v.srcObject=s; v.classList.toggle('mirror',L.facing==='user'); v.play().catch(()=>{}); } });
-      setChip('Loading tracker');
+      // the picture shows the moment the camera answers — tracking joins in as soon as the model is ready
+      [L.cam&&L.cam.video, L.stand&&L.stand.video].forEach(v=>{ if(v){ v.srcObject=s; v.classList.toggle('mirror',L.facing==='user'); v.classList.add('on','now'); v.play().catch(()=>{}); } });
+      setChip(landmarker?'Looking for you':'Loading tracker');
       return loadModel().then(()=>{
         if(!L.on) return;
         const v=L.cam.video;
@@ -1437,6 +1438,7 @@ function puttRecord(list){
 /* ================================================================= EXPORT */
 const Live = {
   begin, attachCam, end, setMode, exportLog, setDebug,
+  preload(){ return loadModel().catch(()=>{}); },      // pages call this on load so Start is instant
   get debug(){ return DEBUG; }, get lastLog(){ return lastLog; },
   get active(){ return L.on; },
   get swings(){ return L.swings; },

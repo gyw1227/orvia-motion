@@ -115,6 +115,8 @@
   window.addEventListener('orvia:report', ()=>{ if(running) stop(); });
   window.addEventListener('orvia:again', ()=>start(false));
 
+  // load and warm the tracker while the start screen is up, so Start is instant
+  if(window.Live && Live.preload) Live.preload();
   camCheck();
   $('#mcEnd').addEventListener('click',()=>running?stop():start(false));
   $('#mcDemo').addEventListener('click',()=>start(true));

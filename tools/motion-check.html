@@ -1136,6 +1136,9 @@ svg.mk-layer{position:absolute;inset:0;width:100%;height:100%;overflow:visible;t
 .sf-foot .btn{height:52px;font-size:15px}
 .sf-hint{margin-top:8px}
 
+/* no fade when the camera answers — the picture is there at 0 s */
+.zc-video.now,.st-video.now{transition:none}
+
 /* Motion check page — only what the stand-alone camera window needs on top of styles.css */
 body{display:block;background:#0b130e}
 #zs.overlay.show{display:grid;position:fixed}
@@ -1793,8 +1796,9 @@ function startSource(){
     .then(s=>{
       if(!L.on){ s.getTracks().forEach(t=>t.stop()); return; }
       L.stream=s;
-      [L.cam&&L.cam.video, L.stand&&L.stand.video].forEach(v=>{ if(v){ v.srcObject=s; v.classList.toggle('mirror',L.facing==='user'); v.play().catch(()=>{}); } });
-      setChip('Loading tracker');
+      // the picture shows the moment the camera answers — tracking joins in as soon as the model is ready
+      [L.cam&&L.cam.video, L.stand&&L.stand.video].forEach(v=>{ if(v){ v.srcObject=s; v.classList.toggle('mirror',L.facing==='user'); v.classList.add('on','now'); v.play().catch(()=>{}); } });
+      setChip(landmarker?'Looking for you':'Loading tracker');
       return loadModel().then(()=>{
         if(!L.on) return;
         const v=L.cam.video;
@@ -2637,6 +2641,7 @@ function puttRecord(list){
 /* ================================================================= EXPORT */
 const Live = {
   begin, attachCam, end, setMode, exportLog, setDebug,
+  preload(){ return loadModel().catch(()=>{}); },      // pages call this on load so Start is instant
   get debug(){ return DEBUG; }, get lastLog(){ return lastLog; },
   get active(){ return L.on; },
   get swings(){ return L.swings; },
@@ -2706,6 +2711,8 @@ window.Live = Live;
     el.textContent = ok ? 'The browser will ask to use the camera.' : (framed ? 'Claude’s preview can’t use the camera — open the site link to test it.' : window.isSecureContext ? 'This browser has no camera access here.' : 'Camera needs an https address — open the site link, not a file.');
   }
   window.addEventListener('orvia:setdone', ()=>{ setTimeout(()=>{ if(running) stop(); }, 4500); });
+  // load and warm the tracker while the start screen is up, so Start is instant
+  if(window.Live && Live.preload) Live.preload();
   camCheck();
   $('#mcEnd').addEventListener('click',()=>running?stop():start(false));
   $('#mcDemo').addEventListener('click',()=>start(true));

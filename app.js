@@ -1599,7 +1599,7 @@ function zsSetProgress(frac, snap=false){
 /* Motion-camera view. The session clock hands over to it after ZS_CAM_AT seconds.
    There is no live feed yet — the pose below is a stand-in for what the tracker draws;
    .zc-feed is where the camera stream will go. */
-const ZS_CAM_AT=3;
+const ZS_CAM_AT=0;            // the camera opens the moment the clock starts
 function zsPoseSVG(){
   const J={head:[100,56],neck:[100,92],ls:[74,104],rs:[126,104],le:[64,148],re:[120,152],lw:[93,186],rw:[105,186],
            lh:[86,208],rh:[114,208],lk:[78,272],rk:[122,270],la:[74,338],ra:[130,336]};
@@ -1688,6 +1688,7 @@ function startSession(mission){
   }, ZS_CUES.length*1000));
 
   function tick(){
+    if(ZS_CAM_AT===0) showZsCam(N, first);      // 0 s — no wait after "Start!"
     // Both the arc and the guide riding its edge are drawn from one clock-derived
     // position, so they always move together. The rAF gives it per-frame smoothness;
     // the interval repaints too, so the dial still advances if frames are throttled.
@@ -1702,7 +1703,6 @@ function startSession(mission){
       const set=Math.min(N, 1+Math.floor(state.zsElapsed/PER));
       const setHTML=`${set}<span class="zs-sets-tot"> / ${N}</span>`;
       if(setsEl && !(window.Live&&Live.active)) setsEl.innerHTML=setHTML;   // live: sets count real swings
-      if(state.zsElapsed===ZS_CAM_AT) showZsCam(N, first);
       paint();
       if(state.zsElapsed>=TOTAL && !(window.Live&&Live.active)){ clearInterval(state.zsTimer); state.zsTimer=null; }
     },1000);
