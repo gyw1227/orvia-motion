@@ -1189,7 +1189,7 @@ function mountStand(){
     <div class="st-scan" aria-hidden="true"></div>
     <canvas class="st-canvas" aria-hidden="true"></canvas>
     <div class="st-top">
-      <div class="st-id"><span class="eyebrow">Stand camera</span><span class="zc-chip st-chip"><i></i>Starting camera</span></div>
+      <div class="st-id"><span class="zc-chip st-chip"><i></i>Starting camera</span></div>
     </div>
     <div class="st-phase"><div class="st-ph" id="stPh">Standby</div>
       <div class="st-modeline"><b class="st-mode-n">${L.mode}</b><span class="st-mm">weight at ${MODES[L.mode].mm} mm</span></div></div>
