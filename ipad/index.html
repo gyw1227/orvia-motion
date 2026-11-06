@@ -1394,7 +1394,8 @@ function createEngine(modeName, handed){
     const vx=(h.x-S.hands.x)/(dt/1000), vy=(h.y-S.hands.y)/(dt/1000), av=1-Math.exp(-dt/40);
     S.vx+=(vx-S.vx)*av; S.vy+=(vy-S.vy)*av; S.hands=h;
   }
-  const visible=()=>['lSh','rSh','lHip','rHip'].every(k=>S[k].v>=0.45);
+  const visible=()=>{ const need=['takeaway','top','downswing','impact','through'].includes(phase)?0.25:0.45;
+    return ['lSh','rSh','lHip','rHip'].every(k=>S[k].v>=need); };
 
   function measure(){
     const s=side(), shMid=mid(S.lSh,S.rSh), hipMid=mid(S.lHip,S.rHip);
@@ -1431,22 +1432,35 @@ function createEngine(modeName, handed){
   }
   function capture(ev,ph,t,m,force){ if(force || !swing.cap[ph]){ swing.cap[ph]=t; swing.ph[ph]=m; ev.push({type:'capture',phase:ph,t}); } }
   function reset(t,ev){ swing=null; A=null; setPhase('ready',t,ev); }
+  // the picture went away mid-swing: if the club already came down through the ball,
+  // the swing happened — finish it with what was seen
+  function finishLost(t,ev){
+    if(['impact','through'].includes(phase) || (phase==='downswing' && swing.minD!=null && swing.minD<swing.dmax*0.6)){
+      if(phase==='downswing'){ swing.tImp=swing.minT; swing.tImpR=swing.minT; swing.imp=swing.minM; capture(ev,'impact',swing.minT,swing.minM); ev.push({type:'impact',t:swing.minT,speed:swing.peak}); }
+      const m=swing.last||swing.imp;
+      if(!swing.cap.through) capture(ev,'through',t,m);
+      capture(ev,'finish',t,m);
+      count++;
+      const rep=report(swing,m);
+      setPhase('finish',t,ev); ev.push({type:'swing',t,report:rep});
+      swing=null; return true;
+    }
+    return false;
+  }
 
   function update(lm,t){
     const ev=[];
     const active=['takeaway','top','downswing','impact','through'].includes(phase);
-    if(!lm || lm.length<29){
-      // the model drops a frame or two in the blur of a fast downswing — ride it out
-      if(active && t-lastSeen<380){ lastT=t; return {phase, live:null, events:ev, held:true}; }
-      if(phase!=='idle'){ swing=null; A=null; setPhase('idle',t,ev); }
-      lastT=t; return {phase, live:null, events:ev};
-    }
-    smooth(lm,t); lastT=t;
-    if(!visible()){
-      if(active && t-lastSeen<380) return {phase, live:null, events:ev, held:true};
+    const lost=()=>{
+      // the model drops frames in the blur of a fast swing, or the golfer turns out of view at the finish
+      if(active && t-lastSeen<450) return {phase, live:null, events:ev, held:true};
+      if(swing && A && finishLost(t,ev)) return {phase, live:null, events:ev};
       if(phase!=='idle'){ swing=null; A=null; setPhase('idle',t,ev); }
       return {phase, live:null, events:ev};
-    }
+    };
+    if(!lm || lm.length<29){ lastT=t; return lost(); }
+    smooth(lm,t); lastT=t;
+    if(!visible()) return lost();
     const prevSeen=lastSeen; lastSeen=t;
     const tl=dist(mid(S.lSh,S.rSh),mid(S.lHip,S.rHip));
     torso=torso==null?tl:torso+(tl-torso)*0.08;
@@ -1507,12 +1521,18 @@ function createEngine(modeName, handed){
         swing.headMax=Math.max(swing.headMax,m.head); swing.swayMax=Math.max(swing.swayMax,m.sway);
         swing.peak=Math.max(swing.peak,m.speed); swing.samples.push([t,m.speed]);
         if(d<swing.dmax*0.62) capture(ev,'downswing',t,m);
-        if(crossed || (d<swing.dmax*0.3 && t-swing.downAt>40)) strike(m, crossed?(prevSeen+t)/2:t);
-        else if(t-swing.downAt>1100) reset(t,ev);
+        // track the lowest point of the hands' return; the strike is called when they start
+        // away again (or run past address toward the target) — that's the ball, not before it
+        if(swing.minD==null || d<swing.minD){ swing.minD=d; swing.minT=t; swing.minM=m; }
+        const s_=side(), leadDir=Math.sign(S[s_.ank].x-S[s_.tank].x)||1, past=(S.hands.x-A.hands.x)*leadDir;
+        const near=swing.minD<swing.dmax*0.45;
+        if(crossed) strike(m,(prevSeen+t)/2);
+        else if(near && t-swing.downAt>40 && (vr>0.004*T || past>0.12*T)) strike(swing.minM, swing.minT);
+        else if(t-swing.downAt>1300){ if(swing.minD<swing.dmax*0.6) strike(swing.minM, swing.minT); else reset(t,ev); }
         break;
       }
       case 'impact': {
-        const m=measure();
+        const m=measure(); swing.last=m;
         // impact is called on the way in; the frame where the hands come closest to
         // address is the real strike — move the time and the still there
         if(d<swing.impD){ swing.impD=d; swing.imp=m; swing.tImpR=t; capture(ev,'impact',t,m,true); }
@@ -1521,10 +1541,10 @@ function createEngine(modeName, handed){
         break;
       }
       case 'through': {
-        const m=measure();
+        const m=measure(); swing.last=m;
         if(d>swing.dmax*(P?0.55:0.72)) capture(ev,'through',t,m);
         const settle=P?0.12*T:0.5*T;
-        if((speedPx<settle && t-phaseT>120) || t-swing.tImp>1900){
+        if((speedPx<settle && t-phaseT>120) || t-swing.tImp>1500){
           if(!swing.cap.through) capture(ev,'through',(phaseT+t)/2,m);
           capture(ev,'finish',t,m);
           count++;
@@ -1792,7 +1812,7 @@ function loadModel(){
       const next=i=>i>=tries.length ? Promise.reject(err||new Error('model'))
         : vision.PoseLandmarker.createFromOptions(fileset,{
             baseOptions:{modelAssetPath:tries[i][0], delegate:tries[i][1]},
-            runningMode:'VIDEO', numPoses:1,
+            runningMode:'VIDEO', numPoses:4,          // a crowd behind the golfer: find them all, keep the one in the middle
             minPoseDetectionConfidence:.5, minPosePresenceConfidence:.5, minTrackingConfidence:.5
           }).then(l=>{ Live._modelUrl=tries[i][0]; Live._delegate=tries[i][1]; return l; }).catch(e=>{ err=e; return next(i+1); });
       return next(0);
@@ -1961,11 +1981,38 @@ function loopCam(){
   L.lastVT=v.currentTime; L.fw=v.videoWidth||L.fw; L.fh=v.videoHeight||L.fh;
   const now=performance.now(); let lm=null;
   try{
-    const r=landmarker.detectForVideo(v, now), raw=r&&r.landmarks&&r.landmarks[0];
+    const r=landmarker.detectForVideo(v, now), raw=pickGolfer(r&&r.landmarks);
     if(raw){ const hasVis=raw.some(p=>p.visibility>0);
       lm=raw.map(p=>({x:p.x*L.fw, y:p.y*L.fh, v:hasVis?p.visibility:1})); }
   }catch(e){}
   frame(lm, now, v);
+}
+/* The golfer is whoever stands in the middle of the picture. Everyone else —
+   people walking past, a queue behind — is ignored. Once someone is locked on,
+   they stay the golfer while they remain near where they were (a swing moves
+   the hips a little, never across the frame). */
+const CENTRE=0.22;          // half-width of the middle zone, as a share of the frame
+function pickGolfer(all){
+  L.offCentre=false;
+  if(!all || !all.length) return null;
+  const info=all.map(p=>{
+    const hx=(p[23].x+p[24].x)/2, sx=(p[11].x+p[12].x)/2, cx=(hx+sx)/2;
+    const ys=p.filter((_,i)=>i===0||i>=27).map(q=>q.y), h=Math.max(...ys)-Math.min(...ys);
+    return {p, cx, h};
+  });
+  const g=L.golfer;
+  if(g){                                            // keep the person we're already following
+    // same place AND same size — someone walking close behind is a different height in the picture
+    const cost=o=>Math.abs(o.cx-g.cx)+Math.abs(o.h-g.h)/Math.max(.05,g.h)*0.1;
+    const same=info.filter(o=>Math.abs(o.cx-g.cx)<0.12).sort((a,b)=>cost(a)-cost(b))[0];
+    if(same && Math.abs(same.cx-0.5)<CENTRE+0.12){ g.cx=same.cx; g.h+= (same.h-g.h)*0.2; g.seen=performance.now(); return same.p; }
+    if(performance.now()-g.seen<500) return null;  // a blink — don't jump to someone else yet
+    L.golfer=null;
+  }
+  const mid=info.filter(o=>Math.abs(o.cx-0.5)<CENTRE).sort((a,b)=>b.h-a.h)[0];
+  if(!mid){ L.offCentre=true; return null; }
+  L.golfer={cx:mid.cx, h:mid.h, seen:performance.now()};
+  return mid.p;
 }
 function loopDemo(){
   if(!L.on || L.source!=='demo') return;
@@ -2022,6 +2069,7 @@ function hintFor(ph, lm, r){
   if(!L.cam || !L.cam.hint) return;
   const n=L.swings.length, more=n>0 && n<L.sets;
   const h = L.source==='demo' ? (L.demoReason==='Demo'?'Demo golfer — no camera in use':L.demoReason+' · demo golfer')
+          : L.offCentre ? 'Step into the middle of the frame'
           : !lm||ph==='idle' ? 'Keep your whole body inside the frame'
           : (ph==='ready'||ph==='finish') && r && r.feet===false ? 'Step back until your feet are in the frame'
           : ph==='finish' ? (n>=L.sets ? 'Set complete' : `Swing ${n} done — set up again for swing ${n+1}`)
@@ -2045,7 +2093,6 @@ function onEvent(e, lm){
   if(L.log && e.type!=='swing') L.log.events.push([Math.round(e.t-L.t0), e.type, e.phase||'']);
   if(e.type==='phase'){
     if(e.phase==='address'){ emit('orvia:address', {n:L.swings.length, demo:L.source==='demo'}); if(L.swings.length<L.sets) hideSwingCard(); L.trail=[]; L.curFrames={}; SND.lock(); if(!L._saidLaser){ L._saidLaser=true; say('Laser on. Swing when ready.'); } }
-    if(e.phase==='downswing') SND.whoosh(MODES[L.mode].type==='putt'?.25:.32);
     if(L.stand) L.stand.setPhase(e.phase);
   } else if(e.type==='capture'){
     grabFrame(e.phase, e.t);
@@ -2713,7 +2760,8 @@ function puttRecord(list){
 /* ================================================================= EXPORT */
 const Live = {
   begin, attachCam, end, setMode, exportLog, setDebug,
-  preload(){ return loadModel().catch(()=>{}); },      // pages call this on load so Start is instant
+  preload(){ return loadModel().catch(()=>{}); },
+  _pick:pickGolfer,      // pages call this on load so Start is instant
   get debug(){ return DEBUG; }, get lastLog(){ return lastLog; },
   get active(){ return L.on; },
   get swings(){ return L.swings; },
